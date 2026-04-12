@@ -3,26 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const SITE_PASSWORD = "yongsoo2026!";
+
 export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-
-    if (res.ok) {
+    if (password === SITE_PASSWORD) {
+      localStorage.setItem("bex-auth", "authenticated");
       router.push("/");
-      router.refresh();
     } else {
       setError("비밀번호가 올바르지 않습니다.");
       setLoading(false);

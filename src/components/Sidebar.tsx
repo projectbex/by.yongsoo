@@ -6,12 +6,8 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "전체 개요", icon: "📊" },
   { href: "/staff", label: "담당자별 매출", icon: "👤" },
-  { href: "/inbound", label: "입고", icon: "📥" },
-  { href: "/sales", label: "출고", icon: "📦" },
-  { href: "/revenue", label: "매출", icon: "💰" },
+  { href: "/sales", label: "출고 현황", icon: "📦" },
   { href: "/analysis", label: "데이터 분석", icon: "📈" },
-  { href: "/products", label: "상품관리", icon: "🏷️" },
-  { href: "/upload", label: "엑셀 업로드", icon: "📤" },
 ];
 
 export default function Sidebar() {

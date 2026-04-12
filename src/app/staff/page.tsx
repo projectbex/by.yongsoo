@@ -1,144 +1,145 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import { fetchSheet, parseSalesSheet, SaleRow } from "@/lib/sheets";
 
-interface StaffSale {
-  staffName: string;
-  department: string;
-  customers: { name: string; quantity: number; amount: number }[];
-  totalQuantity: number;
+const COLORS = ["#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06B6D4","#F97316"];
+
+function fmt(n: number) { return new Intl.NumberFormat("ko-KR").format(Math.round(n)); }
+function fmtAmt(n: number) {
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + "억";
+  if (n >= 10000) return (n / 10000).toFixed(0) + "만원";
+  return fmt(n) + "원";
+}
+
+interface StaffStat {
+  name: string;
   totalAmount: number;
-}
-
-function formatNumber(num: number) {
-  return new Intl.NumberFormat("ko-KR").format(Math.round(num));
-}
-
-function formatAmount(num: number) {
-  if (num >= 100000000) return (num / 100000000).toFixed(1) + "억";
-  if (num >= 10000) return (num / 10000).toFixed(0) + "만";
-  return formatNumber(num);
+  totalQuantity: number;
+  customerCount: number;
+  customers: { name: string; amount: number; quantity: number }[];
 }
 
 export default function StaffPage() {
-  const [data, setData] = useState<StaffSale[]>([]);
-  const [month, setMonth] = useState("");
+  const [staffStats, setStaffStats] = useState<StaffStat[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (month) params.set("month", month);
-    const res = await fetch(`/api/staff?${params}`);
-    const json = await res.json();
-    setData(json);
-    setLoading(false);
-  }, [month]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const salesRows = await fetchSheet("매출데이터");
+        const sales = parseSalesSheet(salesRows);
+        const map = new Map<string, { customers: Map<string, { amount: number; quantity: number }>; totalAmt: number; totalQty: number }>();
+        for (const s of sales) {
+          if (!s.staff) continue;
+          let bucket = map.get(s.staff);
+          if (!bucket) { bucket = { customers: new Map(), totalAmt: 0, totalQty: 0 }; map.set(s.staff, bucket); }
+          const amt = s.supplyAmount + s.taxAmount;
+          bucket.totalAmt += amt;
+          bucket.totalQty += s.quantity;
+          const cust = bucket.customers.get(s.customer) || { amount: 0, quantity: 0 };
+          cust.amount += amt;
+          cust.quantity += s.quantity;
+          bucket.customers.set(s.customer, cust);
+        }
+        const stats: StaffStat[] = Array.from(map.entries())
+          .map(([name, b]) => ({
+            name, totalAmount: b.totalAmt, totalQuantity: b.totalQty,
+            customerCount: b.customers.size,
+            customers: Array.from(b.customers.entries())
+              .map(([n, c]) => ({ name: n, amount: c.amount, quantity: c.quantity }))
+              .sort((a, b) => b.amount - a.amount),
+          }))
+          .sort((a, b) => b.totalAmount - a.totalAmount);
+        setStaffStats(stats);
+        if (stats.length > 0) setSelected(stats[0].name);
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
 
-  useEffect(() => { load(); }, [load]);
+  if (loading) return (
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="inline-block w-10 h-10 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
+    </div>
+  );
 
-  const selectedData = data.find((d) => d.staffName === selected);
+  const selectedStaff = staffStats.find(s => s.name === selected);
+  const chartData = staffStats.slice(0, 10).map(s => ({ name: s.name, 매출금액: s.totalAmount }));
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">담당자별 매출 현황</h1>
-          <p className="text-xs text-gray-400 mt-0.5">담당자별 매출 및 거래처 상세</p>
-        </div>
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-        />
+    <div className="p-6 bg-[#f8fafc] min-h-screen">
+      <div className="mb-5">
+        <h1 className="text-lg font-bold text-gray-900">담당자별 매출 현황</h1>
+        <p className="text-xs text-gray-400 mt-0.5">담당자별 매출 및 거래처 상세</p>
       </div>
-
-      {loading ? (
-        <div className="text-center py-20 text-gray-400">로딩 중...</div>
-      ) : (
-        <div className="grid grid-cols-3 gap-4">
-          {/* 담당자별 매출 차트 */}
-          <div className="col-span-2 bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4">담당자별 매출금액</h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={data.map((d) => ({ name: d.staffName, 금액: Math.round(d.totalAmount / 10000), 수량: d.totalQuantity }))} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickFormatter={(v) => formatAmount(v) + "만"} />
-                <YAxis dataKey="name" type="category" tick={{ fill: "#374151", fontSize: 12 }} axisLine={false} width={60} />
-                <Tooltip
-                  contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
-                  formatter={(value, name) => [String(name) === "금액" ? formatNumber(Number(value)) + "만원" : formatNumber(Number(value)) + "개", String(name)]}
-                />
-                <Bar dataKey="금액" fill="#3b82f6" radius={[0, 4, 4, 0]} cursor="pointer" onClick={(d) => setSelected(d.name ?? null)} />
-              </BarChart>
-            </ResponsiveContainer>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-800 mb-4">담당자별 매출금액</h2>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={chartData} layout="vertical" margin={{ left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis type="number" tickFormatter={(v) => fmtAmt(v)} tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(v) => [fmt(Number(v)) + "원", "매출금액"]} />
+              <Bar dataKey="매출금액" fill="#3B82F6" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-800 mb-4">담당자 상세</h2>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {staffStats.map((s) => (
+              <button key={s.name} onClick={() => setSelected(s.name)}
+                className={`px-3 py-1.5 text-xs rounded-lg transition-all ${selected === s.name ? "bg-blue-500 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                {s.name}
+              </button>
+            ))}
           </div>
-
-          {/* 담당자 목록 테이블 */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-900 mb-4">담당자 상세</h2>
-            <div className="space-y-1 max-h-[420px] overflow-y-auto">
-              {data.map((d, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelected(d.staffName === selected ? null : d.staffName)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all ${
-                    selected === d.staffName
-                      ? "bg-blue-50 border border-blue-200"
-                      : "hover:bg-gray-50 border border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-900 font-medium">{d.staffName}</span>
-                    <span className="text-green-600 font-semibold">{formatAmount(d.totalAmount)}원</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-1 text-gray-400">
-                    <span>수량 {formatNumber(d.totalQuantity)}개</span>
-                    <span>거래처 {d.customers.length}곳</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 선택된 담당자의 거래처별 상세 */}
-          {selectedData && (
-            <div className="col-span-3 bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-900 mb-4">
-                <span className="text-blue-600">{selectedData.staffName}</span> 거래처별 매출 상세
-              </h2>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-gray-400 border-b border-gray-100">
-                    <th className="text-left py-2">#</th>
-                    <th className="text-left py-2">거래처명</th>
-                    <th className="text-right py-2">수량</th>
-                    <th className="text-right py-2">금액</th>
-                    <th className="text-right py-2">비중</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedData.customers.map((c, i) => {
-                    const pct = selectedData.totalAmount > 0 ? ((c.amount / selectedData.totalAmount) * 100).toFixed(1) : "0";
-                    return (
-                      <tr key={i} className="border-b border-gray-50">
-                        <td className="py-2.5 text-gray-400">{i + 1}</td>
-                        <td className="py-2.5 text-gray-700">{c.name}</td>
-                        <td className="text-right text-gray-500">{formatNumber(c.quantity)}</td>
-                        <td className="text-right text-green-600 font-medium">{formatAmount(c.amount)}원</td>
-                        <td className="text-right text-amber-600">{pct}%</td>
+          {selectedStaff && (
+            <div>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="bg-blue-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-blue-600">{fmtAmt(selectedStaff.totalAmount)}</p>
+                  <p className="text-xs text-gray-500">매출금액</p>
+                </div>
+                <div className="bg-green-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-green-600">{fmt(selectedStaff.totalQuantity)}</p>
+                  <p className="text-xs text-gray-500">수량</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-purple-600">{selectedStaff.customerCount}</p>
+                  <p className="text-xs text-gray-500">거래처</p>
+                </div>
+              </div>
+              <div className="max-h-64 overflow-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="text-left py-2 px-3 text-gray-600 font-medium">거래처</th>
+                      <th className="text-right py-2 px-3 text-gray-600 font-medium">수량</th>
+                      <th className="text-right py-2 px-3 text-gray-600 font-medium">금액</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedStaff.customers.slice(0, 15).map((c, i) => (
+                      <tr key={c.name} className={i % 2 ? "bg-gray-50/50" : ""}>
+                        <td className="py-1.5 px-3 text-gray-700 truncate max-w-[200px]">{c.name}</td>
+                        <td className="py-1.5 px-3 text-right text-gray-600">{fmt(c.quantity)}</td>
+                        <td className="py-1.5 px-3 text-right font-medium text-gray-800">{fmtAmt(c.amount)}</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

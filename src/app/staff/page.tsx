@@ -72,7 +72,7 @@ export default function StaffPage() {
   const chartData = staffStats.slice(0, 10).map(s => ({ name: s.name, 매출금액: s.totalAmount }));
 
   return (
-    <div className="p-6 bg-[#f8fafc] min-h-screen">
+    <div className="p-3 md:p-6 bg-[#f8fafc] min-h-screen">
       <div className="mb-5">
         <h1 className="text-lg font-bold text-gray-900">담당자별 매출 현황</h1>
         <p className="text-xs text-gray-400 mt-0.5">담당자별 매출 및 거래처 상세</p>

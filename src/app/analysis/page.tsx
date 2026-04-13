@@ -184,7 +184,7 @@ export default function AnalysisPage() {
   /* ────────── main render ────────── */
 
   return (
-    <div className="p-6 bg-[#f8fafc] min-h-screen">
+    <div className="p-3 md:p-6 bg-[#f8fafc] min-h-screen">
       {/* 헤더 */}
       <div className="mb-5">
         <h1 className="text-lg font-bold text-gray-900">데이터 분석</h1>
@@ -194,7 +194,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex flex-wrap gap-1 mb-5 bg-gray-100 rounded-xl p-1 w-fit">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -220,7 +220,7 @@ export default function AnalysisPage() {
       ) : (
         <>
           {/* 요약 카드 */}
-          <div className="grid grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             <SummaryCard
               label={`${tabLabel} 분류 수`}
               value={String(stats.length)}
@@ -252,9 +252,9 @@ export default function AnalysisPage() {
           </div>
 
           {/* 차트 영역 */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* 바 차트 (horizontal) */}
-            <div className="col-span-2 bg-white rounded-2xl shadow-sm p-5">
+            <div className="md:col-span-2 bg-white rounded-2xl shadow-sm p-3 md:p-5">
               <h2 className="text-sm font-semibold text-gray-900 mb-1">
                 {tabLabel} 매출금액
               </h2>

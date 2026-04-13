@@ -35,7 +35,7 @@ export default function SalesPage() {
   );
 
   return (
-    <div className="p-6 bg-[#f8fafc] min-h-screen">
+    <div className="p-3 md:p-6 bg-[#f8fafc] min-h-screen">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-gray-900">출고 현황</h1>

@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BEX SCM 대시보드",
   description: "벡스인터코퍼레이션 유통영업본부 출고관리 시스템",
+  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
 };
 
 export default function RootLayout({

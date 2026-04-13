@@ -189,7 +189,7 @@ export default function Dashboard() {
     }));
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6">
+    <div className="min-h-screen bg-[#f8fafc] p-3 md:p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">BEX 유통영업본부 출고 대시보드</h1>

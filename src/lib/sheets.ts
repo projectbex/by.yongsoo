@@ -66,7 +66,7 @@ export function parseSalesSheet(rows: string[][]): SaleRow[] {
   return rows.slice(1).map((r) => ({
     staff: r[3] || "",
     staffCode: r[2] || "",
-    customer: r[5] || "",
+    customer: (r[5] || "").trim(),
     customerCode: r[4] || "",
     saleType: r[6] || "",
     saleDate: r[7] || "",
@@ -74,11 +74,15 @@ export function parseSalesSheet(rows: string[][]): SaleRow[] {
     product: r[9] || "",
     volume: r[11] || "",
     unit: r[12] || "",
-    quantity: parseInt(r[15]) || 0,
-    unitPrice: parseFloat(r[16]) || 0,
-    supplyAmount: parseFloat(r[17]) || 0,
-    taxAmount: parseFloat(r[18]) || 0,
-  })).filter(r => r.staff && r.customer);
+    quantity: parseInt(String(r[15]).replace(/,/g, "")) || 0,
+    unitPrice: parseFloat(String(r[16]).replace(/,/g, "")) || 0,
+    supplyAmount: parseFloat(String(r[17]).replace(/,/g, "")) || 0,
+    taxAmount: parseFloat(String(r[18]).replace(/,/g, "")) || 0,
+  })).filter(r =>
+    r.staff                        // 담당자명 존재
+    && r.customer                  // 거래처명 존재 (빈값 제거)
+    && r.saleType.includes("매출") // 매출구분 = "매출"만 (견본/미분류 제외)
+  );
 }
 
 // 거래처정보 시트 파싱

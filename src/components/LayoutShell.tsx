@@ -3,40 +3,51 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
+import { DataProvider } from "@/lib/dataContext";
 
-export default function LayoutShell({ children }: { children: React.ReactNode }) {
+function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
-  const isLoginPage = pathname === "/login";
+  const [ok, setOk] = useState(false);
+  const isLogin = pathname === "/login";
 
   useEffect(() => {
-    if (!isLoginPage) {
-      const auth = localStorage.getItem("bex-auth");
-      if (auth !== "authenticated") {
+    if (!isLogin && typeof window !== "undefined") {
+      if (localStorage.getItem("bex-auth") !== "authenticated") {
         router.push("/login");
         return;
       }
     }
-    setChecked(true);
-  }, [pathname, isLoginPage, router]);
+    setOk(true);
+  }, [pathname, isLogin, router]);
 
-  if (isLoginPage) {
-    return <>{children}</>;
-  }
+  if (isLogin) return <>{children}</>;
+  if (!ok) return (
+    <div className="min-h-screen bg-[#111827] flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-blue-900 border-t-blue-400 rounded-full animate-spin" />
+    </div>
+  );
+  return <>{children}</>;
+}
 
-  if (!checked) {
-    return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-        <div className="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
+export default function LayoutShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isLogin = pathname === "/login";
+
+  if (isLogin) return <AuthGate>{children}</AuthGate>;
 
   return (
-    <div className="flex min-h-full">
-      <Sidebar />
-      <main className="flex-1 overflow-auto pb-20 md:pb-0">{children}</main>
-    </div>
+    <AuthGate>
+      <DataProvider>
+        <div className="flex min-h-screen bg-[#111827]">
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <Topbar />
+            <main className="flex-1 overflow-auto pb-20 md:pb-0">{children}</main>
+          </div>
+        </div>
+      </DataProvider>
+    </AuthGate>
   );
 }

@@ -26,19 +26,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center p-4">
+      <div className="bg-[#1F2937] rounded-2xl p-8 w-full max-w-md border border-white/5">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl font-bold">B</span>
+          <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-xl font-bold">B</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">BEX SCM</h1>
-          <p className="text-gray-500 mt-1">유통영업본부 대시보드</p>
+          <h1 className="text-xl font-bold text-white">BEX SCM</h1>
+          <p className="text-gray-500 text-xs mt-1">유통영업본부 BI 대시보드</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">
               비밀번호
             </label>
             <input
@@ -46,25 +46,25 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="비밀번호를 입력하세요"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full px-4 py-3 bg-[#111827] border border-white/10 text-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
               autoFocus
             />
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <p className="text-red-400 text-xs text-center">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading || !password}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium text-sm hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
             {loading ? "확인 중..." : "로그인"}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-[11px] text-gray-600 mt-6">
           벡스인터코퍼레이션 내부용
         </p>
       </div>

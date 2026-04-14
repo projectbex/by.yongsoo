@@ -32,7 +32,7 @@ export default function ProductAnalysisPage() {
     <button
       onClick={() => setSortKey(key)}
       className={`text-xs px-3 py-1 rounded-md transition ${
-        sortKey === key ? "bg-blue-500 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+        sortKey === key ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
       }`}
     >
       {label}
@@ -52,22 +52,22 @@ export default function ProductAnalysisPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">#</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">품목</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">매출</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">수량</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">건수</th>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">#</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">품목</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">건수</th>
               </tr>
             </thead>
             <tbody>
               {data.map((r, i) => (
-                <tr key={r.name} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-2 px-2 text-xs text-gray-500">{i + 1}</td>
-                  <td className="py-2 px-2 text-xs text-white max-w-[240px] truncate">{r.name}</td>
-                  <td className="py-2 px-2 text-xs text-blue-400 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300 text-right">{fmt(r.qty)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-400 text-right">{fmt(r.count)}</td>
+                <tr key={r.name} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2 px-2 text-xs text-slate-500">{i + 1}</td>
+                  <td className="py-2 px-2 text-xs text-slate-900 max-w-[240px] truncate">{r.name}</td>
+                  <td className="py-2 px-2 text-xs text-blue-600 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.qty)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500 text-right">{fmt(r.count)}</td>
                 </tr>
               ))}
             </tbody>

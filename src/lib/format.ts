@@ -19,16 +19,22 @@ export function fmtPct(n: number): string {
   return sign + n.toFixed(1) + "%";
 }
 
-/** 증감 색상 */
+/** 증감 색상 (라이트 테마) */
 export function deltaColor(n: number): string {
-  if (n > 0) return "text-emerald-400";
-  if (n < 0) return "text-red-400";
-  return "text-gray-400";
+  if (n > 0) return "text-emerald-600";
+  if (n < 0) return "text-red-600";
+  return "text-slate-500";
 }
 
-/** 증감 배경 색상 */
+/** 증감 배경 색상 (라이트 테마) */
 export function deltaBg(n: number): string {
-  if (n > 0) return "bg-emerald-400/10";
-  if (n < 0) return "bg-red-400/10";
-  return "bg-gray-400/10";
+  if (n > 0) return "bg-emerald-50";
+  if (n < 0) return "bg-red-50";
+  return "bg-slate-100";
+}
+
+/** null 안전 퍼센트 — null일 때 fallback 문자열 반환 */
+export function fmtPctOrNull(n: number | null, fallback = "—"): string {
+  if (n === null || n === undefined || !isFinite(n)) return fallback;
+  return fmtPct(n);
 }

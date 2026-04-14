@@ -43,9 +43,9 @@ export default function RegionAnalysisPage() {
       <ChartCard title="광역 지역별 매출" subtitle="단위: 만원">
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={broad}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="name" tick={{ fill: "#d1d5db", fontSize: 11 }} axisLine={false} />
-            <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickFormatter={(v) => fmt(v)} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+            <XAxis dataKey="name" tick={{ fill: "#0F172A", fontSize: 12 }} axisLine={false} />
+            <YAxis tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickFormatter={(v) => fmt(v)} />
             <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [fmt(Number(v)) + "만원", "매출"]} />
             <Bar dataKey="금액" radius={[6, 6, 0, 0]}>
               {broad.map((_, i) => (
@@ -60,20 +60,20 @@ export default function RegionAnalysisPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">지역</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">매출</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">수량</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">건수</th>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">지역</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">건수</th>
               </tr>
             </thead>
             <tbody>
               {detail.map((r) => (
-                <tr key={r.name} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-2 px-2 text-xs text-white">{r.name}</td>
-                  <td className="py-2 px-2 text-xs text-blue-400 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300 text-right">{fmt(r.qty)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-400 text-right">{fmt(r.count)}</td>
+                <tr key={r.name} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2 px-2 text-xs text-slate-900">{r.name}</td>
+                  <td className="py-2 px-2 text-xs text-blue-600 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.qty)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500 text-right">{fmt(r.count)}</td>
                 </tr>
               ))}
             </tbody>

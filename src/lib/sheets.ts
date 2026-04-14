@@ -123,6 +123,106 @@ export function parseCustomerSheet(rows: string[][]): CustomerInfo[] {
   return results;
 }
 
+// ─────────────────────────────────────────
+// 영업이익 데이터 (매출 + 원가)
+// ─────────────────────────────────────────
+export interface ProfitRow extends SaleRow {
+  cost: number;   // 원가
+}
+
+// 시트 컬럼 예시:
+//   A: 거래일자 | B: 담당자 | C: 거래처코드 | D: 거래처명 | E: 매출구분
+//   F: 품목코드 | G: 품목명  | H: 수량       | I: 단가     | J: 공급가
+//   K: 부가세  | L: 원가
+// 실제 스키마에 맞춰 인덱스만 수정하면 됨.
+export function parseProfitSheet(rows: string[][]): ProfitRow[] {
+  if (rows.length < 2) return [];
+  return rows.slice(1).map((r) => ({
+    staff: r[1] || "",
+    staffCode: "",
+    customer: (r[3] || "").trim(),
+    customerCode: r[2] || "",
+    saleType: r[4] || "매출",
+    saleDate: r[0] || "",
+    productCode: r[5] || "",
+    product: r[6] || "",
+    volume: "",
+    unit: "",
+    quantity: parseInt(String(r[7]).replace(/,/g, "")) || 0,
+    unitPrice: parseFloat(String(r[8]).replace(/,/g, "")) || 0,
+    supplyAmount: parseFloat(String(r[9]).replace(/,/g, "")) || 0,
+    taxAmount: parseFloat(String(r[10]).replace(/,/g, "")) || 0,
+    cost: parseFloat(String(r[11]).replace(/,/g, "")) || 0,
+  })).filter((r) => r.staff && r.customer && r.saleType.includes("매출"));
+}
+
+// ─────────────────────────────────────────
+// 미수현황
+// ─────────────────────────────────────────
+export interface ReceivableRow {
+  customerCode: string;
+  customer: string;
+  staff: string;
+  team: string;
+  occurredDate: string;       // YYYY-MM-DD
+  amount: number;             // 최초 발생액
+  remaining: number;          // 현재 남은 잔액
+  daysOverdue: number;
+  status: "outstanding" | "paid";
+  note: string;
+}
+
+// 시트 컬럼 예시:
+//   A: 거래처코드 | B: 거래처명 | C: 담당자 | D: 팀
+//   E: 발생일     | F: 미수금액 | G: 잔액   | H: 경과일
+//   I: 상태       | J: 비고
+export function parseReceivableSheet(rows: string[][]): ReceivableRow[] {
+  if (rows.length < 2) return [];
+  return rows.slice(1).map((r) => {
+    const amount = parseFloat(String(r[5]).replace(/,/g, "")) || 0;
+    const remaining = parseFloat(String(r[6]).replace(/,/g, "")) || amount;
+    const statusStr = (r[8] || "").trim();
+    const status: ReceivableRow["status"] =
+      statusStr === "수금완료" || statusStr === "paid" || remaining <= 0 ? "paid" : "outstanding";
+    return {
+      customerCode: r[0] || "",
+      customer: (r[1] || "").trim(),
+      staff: r[2] || "",
+      team: r[3] || "",
+      occurredDate: r[4] || "",
+      amount,
+      remaining,
+      daysOverdue: parseInt(String(r[7]).replace(/,/g, "")) || 0,
+      status,
+      note: r[9] || "",
+    };
+  }).filter((r) => r.customer);
+}
+
+// ─────────────────────────────────────────
+// 목표 데이터
+// ─────────────────────────────────────────
+export interface TargetRow {
+  period: string;                                      // "YYYY-MM"
+  type: "전체" | "담당자" | "유종" | "거래처";
+  key: string;                                          // "-" | 담당자명 | 유종 | 거래처명
+  targetRevenue: number;
+  targetProfit: number;
+}
+
+// 시트 컬럼 예시:
+//   A: 년월 | B: 구분 | C: 키 | D: 목표매출 | E: 목표영업이익
+export function parseTargetSheet(rows: string[][]): TargetRow[] {
+  if (rows.length < 2) return [];
+  return rows.slice(1).map((r) => ({
+    period: r[0] || "",
+    type: ((r[1] || "전체").trim()) as TargetRow["type"],
+    key: (r[2] || "-").trim(),
+    targetRevenue: parseFloat(String(r[3]).replace(/,/g, "")) || 0,
+    targetProfit: parseFloat(String(r[4]).replace(/,/g, "")) || 0,
+  })).filter((r) => r.period);
+}
+
 // 광역 지역 매핑
 const BROAD_REGION_MAP: Record<string, string> = {
   서울: "수도권", 경기: "수도권", 인천: "수도권",

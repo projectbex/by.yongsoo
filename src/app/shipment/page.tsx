@@ -50,29 +50,29 @@ export default function ShipmentPage() {
           placeholder="거래처/품목/담당자 검색"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setLimit(50); }}
-          className="mb-4 w-full md:w-80 bg-[#111827] border border-white/10 text-gray-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+          className="mb-4 w-full md:w-80 bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-blue-500"
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">일자</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">담당</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">거래처</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">품목</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">수량</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">금액</th>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">일자</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">담당</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">거래처</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">품목</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">금액</th>
               </tr>
             </thead>
             <tbody>
               {rows.slice(0, limit).map((r, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-2 px-2 text-xs text-gray-400 whitespace-nowrap">{r.saleDate}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300">{r.staff}</td>
-                  <td className="py-2 px-2 text-xs text-white max-w-[140px] truncate">{r.customer}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300 max-w-[160px] truncate">{r.product}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300 text-right">{fmt(r.quantity)}</td>
-                  <td className="py-2 px-2 text-xs text-blue-400 font-medium text-right whitespace-nowrap">
+                <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2 px-2 text-xs text-slate-500 whitespace-nowrap">{r.saleDate}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700">{r.staff}</td>
+                  <td className="py-2 px-2 text-xs text-slate-900 max-w-[140px] truncate">{r.customer}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700 max-w-[160px] truncate">{r.product}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.quantity)}</td>
+                  <td className="py-2 px-2 text-xs text-blue-600 font-medium text-right whitespace-nowrap">
                     {fmt(r.supplyAmount + r.taxAmount)}원
                   </td>
                 </tr>
@@ -84,7 +84,7 @@ export default function ShipmentPage() {
           <div className="text-center mt-4">
             <button
               onClick={() => setLimit(limit + 50)}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 text-xs rounded-lg"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs rounded-lg"
             >
               더 보기 ({fmt(rows.length - limit)}건 남음)
             </button>

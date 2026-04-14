@@ -24,8 +24,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLogin) return <>{children}</>;
   if (!ok) return (
-    <div className="min-h-screen bg-[#111827] flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-blue-900 border-t-blue-400 rounded-full animate-spin" />
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin" />
     </div>
   );
   return <>{children}</>;
@@ -40,7 +40,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
   return (
     <AuthGate>
       <DataProvider>
-        <div className="flex min-h-screen bg-[#111827]">
+        <div className="flex min-h-screen bg-[#F8FAFC]">
           <Sidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <Topbar />

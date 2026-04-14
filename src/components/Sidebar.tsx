@@ -35,6 +35,16 @@ const MENU: MenuItem[] = [
     ],
   },
   {
+    label: "수익성",
+    icon: "💰",
+    children: [{ href: "/profit", label: "영업이익 분석" }],
+  },
+  {
+    label: "재무",
+    icon: "⚠️",
+    children: [{ href: "/receivables", label: "미수 관리" }],
+  },
+  {
     label: "출고 / 물류",
     icon: "📦",
     children: [{ href: "/shipment", label: "출고 현황" }],
@@ -113,7 +123,7 @@ export default function Sidebar() {
         {/* Footer */}
         <div className="px-5 py-4 border-t border-white/5">
           <p className="text-[10px] text-gray-600">벡스인터코퍼레이션</p>
-          <p className="text-[10px] text-gray-700">v2.0</p>
+          <p className="text-[10px] text-gray-700">v3.0</p>
         </div>
       </aside>
 
@@ -123,7 +133,8 @@ export default function Sidebar() {
           {[
             { href: "/", icon: "📊", label: "개요" },
             { href: "/analysis/category", icon: "📈", label: "분석" },
-            { href: "/sales-team/staff", icon: "👤", label: "영업" },
+            { href: "/profit", icon: "💰", label: "이익" },
+            { href: "/receivables", icon: "⚠️", label: "미수" },
             { href: "/shipment", icon: "📦", label: "출고" },
           ].map((item) => (
             <Link

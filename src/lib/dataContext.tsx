@@ -1,36 +1,88 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
-import { fetchSheet, parseSalesSheet, parseCustomerSheet, SaleRow, CustomerInfo, toBroadRegion } from "./sheets";
+import {
+  fetchSheet, parseSalesSheet, parseCustomerSheet,
+  parseProfitSheet, parseReceivableSheet, parseTargetSheet,
+  SaleRow, CustomerInfo, ProfitRow, ReceivableRow, TargetRow,
+} from "./sheets";
+import { MOCK_PROFITS, MOCK_RECEIVABLES, MOCK_TARGETS } from "./mockData";
+import { toMainCategory, type MainCategory } from "./category";
+import { inRange } from "./kpi";
 
-// ── Filters ──
+// ─────────────────────────────────────────
+// Mock 사용 플래그
+//   실 시트 연결 시 false 로 바꾸면 즉시 실데이터 사용.
+// ─────────────────────────────────────────
+const USE_MOCK_PROFIT = true;
+const USE_MOCK_RECEIVABLE = true;
+const USE_MOCK_TARGET = true;
+
+// 실 시트 이름 (연결 시 사용)
+const SHEET_NAME_PROFIT = "영업이익데이터";
+const SHEET_NAME_RECEIVABLE = "미수현황";
+const SHEET_NAME_TARGET = "목표";
+
+// ─────────────────────────────────────────
+// Filters
+// ─────────────────────────────────────────
 export interface Filters {
-  staff: string;      // 담당자 (전체="")
-  team: string;       // 팀 (전체="")
-  category: string;   // 유종 (전체="")
-  product: string;    // 품목 검색어
-  customer: string;   // 거래처 검색어
+  from: string;                 // YYYYMMDD
+  to: string;                   // YYYYMMDD
+  staff: string;
+  team: string;
+  category: MainCategory | "";  // 대분류
+  product: string;              // 텍스트 검색
+  customer: string;             // 텍스트 검색
+}
+
+// 기본 기간: 2023-01-01 ~ 오늘
+function todayYmd(): string {
+  const d = new Date();
+  return (
+    d.getFullYear().toString() +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    String(d.getDate()).padStart(2, "0")
+  );
 }
 
 const defaultFilters: Filters = {
-  staff: "", team: "", category: "", product: "", customer: "",
+  from: "20230101",
+  to: todayYmd(),
+  staff: "",
+  team: "",
+  category: "",
+  product: "",
+  customer: "",
 };
 
-// ── Context ──
+// ─────────────────────────────────────────
+// Context
+// ─────────────────────────────────────────
 interface DataContextType {
-  raw: SaleRow[];                // 원본 (매출 필터 적용 완료)
-  filtered: SaleRow[];           // 필터 적용 후
+  // 원본
+  sales: SaleRow[];
+  profits: ProfitRow[];
+  receivables: ReceivableRow[];
+  targets: TargetRow[];
   customers: CustomerInfo[];
   customerMap: Map<string, CustomerInfo>;
+  // 필터 적용 결과
+  filtered: SaleRow[];               // 매출
+  filteredProfits: ProfitRow[];      // 영업이익용 (동일 필터 적용)
+  // 필터
   filters: Filters;
   setFilters: (f: Filters) => void;
+  // 리스트
+  staffList: string[];
+  teamList: string[];
+  categoryList: MainCategory[];
+  // 상태
   loading: boolean;
   error: string | null;
   reload: () => void;
-  // 파생 유틸
-  staffList: string[];
-  teamList: string[];
-  categoryList: string[];
+  // Mock 사용 여부 (UI 배지용)
+  usingMock: { profit: boolean; receivable: boolean; target: boolean };
 }
 
 const Ctx = createContext<DataContextType | null>(null);
@@ -41,16 +93,14 @@ export function useData(): DataContextType {
   return ctx;
 }
 
-// ── 유종 추출 ──
-function extractCategory(productName: string): string {
-  // "WD-40 450ML" → "WD-40", "BW-100 225G" → "BW-100", "DCHA" → "DCHA"
-  const first = productName.split(" ")[0];
-  return first || "기타";
-}
-
-// ── Provider ──
+// ─────────────────────────────────────────
+// Provider
+// ─────────────────────────────────────────
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [raw, setRaw] = useState<SaleRow[]>([]);
+  const [sales, setSales] = useState<SaleRow[]>([]);
+  const [profits, setProfits] = useState<ProfitRow[]>([]);
+  const [receivables, setReceivables] = useState<ReceivableRow[]>([]);
+  const [targets, setTargets] = useState<TargetRow[]>([]);
   const [customers, setCustomers] = useState<CustomerInfo[]>([]);
   const [customerMap, setCustomerMap] = useState<Map<string, CustomerInfo>>(new Map());
   const [filters, setFilters] = useState<Filters>(defaultFilters);
@@ -61,16 +111,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
+      // 매출 + 거래처 (실 시트)
       const [salesRows, custRows] = await Promise.all([
         fetchSheet("매출데이터"),
         fetchSheet("거래처정보"),
       ]);
-      const sales = parseSalesSheet(salesRows);   // 이미 매출 필터 적용됨
+      const sales = parseSalesSheet(salesRows);
       const custs = parseCustomerSheet(custRows);
       const map = new Map<string, CustomerInfo>();
       custs.forEach((c) => map.set(c.customer, c));
 
-      setRaw(sales);
+      // 영업이익
+      const profits = USE_MOCK_PROFIT
+        ? MOCK_PROFITS
+        : parseProfitSheet(await fetchSheet(SHEET_NAME_PROFIT));
+
+      // 미수현황
+      const receivables = USE_MOCK_RECEIVABLE
+        ? MOCK_RECEIVABLES
+        : parseReceivableSheet(await fetchSheet(SHEET_NAME_RECEIVABLE));
+
+      // 목표
+      const targets = USE_MOCK_TARGET
+        ? MOCK_TARGETS
+        : parseTargetSheet(await fetchSheet(SHEET_NAME_TARGET));
+
+      setSales(sales);
+      setProfits(profits);
+      setReceivables(receivables);
+      setTargets(targets);
       setCustomers(custs);
       setCustomerMap(map);
     } catch (e: unknown) {
@@ -82,44 +151,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load(); }, []);
 
-  // 필터 적용
-  const filtered = useMemo(() => {
-    let data = raw;
-    if (filters.staff) data = data.filter((s) => s.staff === filters.staff);
-    if (filters.team) {
-      data = data.filter((s) => {
-        const info = customerMap.get(s.customer);
-        return info?.team === filters.team;
-      });
-    }
-    if (filters.category) {
-      data = data.filter((s) => extractCategory(s.product) === filters.category);
-    }
-    if (filters.product) {
-      const q = filters.product.toLowerCase();
-      data = data.filter((s) => s.product.toLowerCase().includes(q));
-    }
-    if (filters.customer) {
-      const q = filters.customer.toLowerCase();
-      data = data.filter((s) => s.customer.toLowerCase().includes(q));
-    }
-    return data;
-  }, [raw, filters, customerMap]);
+  // 공통 필터 적용 함수
+  function applyFilters<T extends {
+    saleDate: string; staff: string; customer: string; product: string;
+  }>(data: T[]): T[] {
+    return data.filter((r) => {
+      if (!inRange(r.saleDate, filters.from, filters.to)) return false;
+      if (filters.staff && r.staff !== filters.staff) return false;
+      if (filters.team) {
+        const info = customerMap.get(r.customer);
+        if (info?.team !== filters.team) return false;
+      }
+      if (filters.category && toMainCategory(r.product) !== filters.category) return false;
+      if (filters.product && !r.product.toLowerCase().includes(filters.product.toLowerCase())) return false;
+      if (filters.customer && !r.customer.toLowerCase().includes(filters.customer.toLowerCase())) return false;
+      return true;
+    });
+  }
 
-  // 유틸 리스트
-  const staffList = useMemo(() => [...new Set(raw.map((s) => s.staff))].sort(), [raw]);
+  const filtered = useMemo(() => applyFilters(sales), [sales, filters, customerMap]);
+  const filteredProfits = useMemo(() => applyFilters(profits), [profits, filters, customerMap]);
+
+  const staffList = useMemo(() => [...new Set(sales.map((s) => s.staff))].filter(Boolean).sort(), [sales]);
   const teamList = useMemo(() => [...new Set(customers.map((c) => c.team).filter(Boolean))].sort(), [customers]);
-  const categoryList = useMemo(() => {
-    const cats = new Set(raw.map((s) => extractCategory(s.product)));
-    return [...cats].sort();
-  }, [raw]);
+  const categoryList: MainCategory[] = ["WD-40", "케이블타이", "방진복", "기타"];
 
   return (
     <Ctx.Provider value={{
-      raw, filtered, customers, customerMap,
+      sales, profits, receivables, targets, customers, customerMap,
+      filtered, filteredProfits,
       filters, setFilters,
-      loading, error, reload: load,
       staffList, teamList, categoryList,
+      loading, error, reload: load,
+      usingMock: {
+        profit: USE_MOCK_PROFIT,
+        receivable: USE_MOCK_RECEIVABLE,
+        target: USE_MOCK_TARGET,
+      },
     }}>
       {children}
     </Ctx.Provider>

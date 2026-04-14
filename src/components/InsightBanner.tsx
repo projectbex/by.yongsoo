@@ -1,7 +1,7 @@
 "use client";
 
 import { SaleRow } from "@/lib/sheets";
-import { fmtKrw, fmt } from "@/lib/format";
+import { fmtKrw } from "@/lib/format";
 
 interface Props {
   sales: SaleRow[];
@@ -26,16 +26,16 @@ export default function InsightBanner({ sales }: Props) {
   const totalAmt = sales.reduce((s, d) => s + d.supplyAmount + d.taxAmount, 0);
 
   return (
-    <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/20 rounded-xl p-4 mb-5">
+    <div className="bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 rounded-2xl p-4">
       <div className="flex items-start gap-3">
         <span className="text-xl">💡</span>
         <div className="space-y-1">
-          <p className="text-sm text-white font-medium">
+          <p className="text-sm text-slate-800 font-medium">
             총 매출 {fmtKrw(totalAmt)} 달성 ·
-            <span className="text-blue-400"> {topProduct}</span>이 {fmtKrw(topAmount)}으로 최고 매출
+            <span className="text-blue-600"> {topProduct}</span>이 {fmtKrw(topAmount)}으로 최고 매출
           </p>
           {bottomProduct && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-slate-500">
               ⚠️ {bottomProduct} 매출 저조 → 프로모션 검토 필요
             </p>
           )}

@@ -48,33 +48,33 @@ export default function CustomerPage() {
           placeholder="거래처명 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="mb-4 w-full md:w-80 bg-[#111827] border border-white/10 text-gray-300 text-xs rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+          className="mb-4 w-full md:w-80 bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-blue-500"
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">#</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">거래처</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">담당</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">지역</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">등급</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">매출</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">수량</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-gray-500 uppercase">건수</th>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">#</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">거래처</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">담당</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">지역</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">등급</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
+                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">건수</th>
               </tr>
             </thead>
             <tbody>
               {data.map((r, i) => (
-                <tr key={r.name} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="py-2 px-2 text-xs text-gray-500">{i + 1}</td>
-                  <td className="py-2 px-2 text-xs text-white font-medium max-w-[180px] truncate">{r.name}</td>
-                  <td className="py-2 px-2 text-xs text-gray-400">{r.staff}</td>
-                  <td className="py-2 px-2 text-xs text-gray-400">{r.region}</td>
-                  <td className="py-2 px-2 text-xs text-emerald-400">{r.grade}</td>
-                  <td className="py-2 px-2 text-xs text-blue-400 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-300 text-right">{fmt(r.qty)}</td>
-                  <td className="py-2 px-2 text-xs text-gray-500 text-right">{fmt(r.count)}</td>
+                <tr key={r.name} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2 px-2 text-xs text-slate-500">{i + 1}</td>
+                  <td className="py-2 px-2 text-xs text-slate-900 font-medium max-w-[180px] truncate">{r.name}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500">{r.staff}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500">{r.region}</td>
+                  <td className="py-2 px-2 text-xs text-emerald-600">{r.grade}</td>
+                  <td className="py-2 px-2 text-xs text-blue-600 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.qty)}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500 text-right">{fmt(r.count)}</td>
                 </tr>
               ))}
             </tbody>

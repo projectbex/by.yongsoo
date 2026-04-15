@@ -4,7 +4,7 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, PieChart, Pie, Legend,
 } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useData } from "@/lib/dataContext";
 import { fmt, fmtKrw, fmtPct } from "@/lib/format";
 import KpiCard from "@/components/KpiCard";
@@ -18,19 +18,54 @@ import {
 import { revenueByMainCategory } from "@/lib/profit";
 import { CATEGORY_COLOR, MAIN_CATEGORIES } from "@/lib/category";
 
+type YearTab = "YTD" | "2023" | "2024" | "2025" | "2026" | "ALL";
+
+function yearTabRange(tab: YearTab): { from: string; to: string; label: string } {
+  const now = new Date();
+  const todayStr =
+    now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, "0") +
+    String(now.getDate()).padStart(2, "0");
+  const curYear = now.getFullYear();
+  if (tab === "YTD") return { from: `${curYear}0101`, to: todayStr, label: `${curYear} 누적 (YTD)` };
+  if (tab === "ALL") return { from: "20230101", to: todayStr, label: "전체 기간" };
+  // 특정 연도: 올해면 YTD 범위, 과거면 12/31
+  const y = Number(tab);
+  if (y === curYear) return { from: `${y}0101`, to: todayStr, label: `${y}년 누적` };
+  return { from: `${y}0101`, to: `${y}1231`, label: `${y}년 전체` };
+}
+
 export default function HomePage() {
   const {
     sales, profits, receivables, targets, customerMap,
-    filtered, filteredProfits, filters, loading, error, reload, usingMock,
+    filters, loading, error, reload, usingMock,
   } = useData();
+
+  // ── 연도 탭 (YTD 기본) ──
+  const [yearTab, setYearTab] = useState<YearTab>("YTD");
+  const tabRange = useMemo(() => yearTabRange(yearTab), [yearTab]);
+
+  // 연도 탭 범위로 로컬 필터링 (Topbar 필터와 독립적으로 동작)
+  const tabFiltered = useMemo(
+    () => sales.filter((r) => inRange(r.saleDate, tabRange.from, tabRange.to)),
+    [sales, tabRange.from, tabRange.to],
+  );
+  const tabFilteredProfits = useMemo(
+    () => profits.filter((r) => inRange(r.saleDate, tabRange.from, tabRange.to)),
+    [profits, tabRange.from, tabRange.to],
+  );
+  // 아래 차트들이 사용하던 변수명 유지
+  const filtered = tabFiltered;
+  const filteredProfits = tabFilteredProfits;
+  void filters; // Topbar 필터는 표시는 유지하되 메인은 연도 탭 기준
 
   // ── 6개 메인 KPI ──
   const kpi = useMemo(() => computeMainKpi({
     sales, filteredSales: filtered,
     profits: filteredProfits,
     receivables, targets,
-    from: filters.from, to: filters.to,
-  }), [sales, filtered, filteredProfits, receivables, targets, filters.from, filters.to]);
+    from: tabRange.from, to: tabRange.to,
+  }), [sales, filtered, filteredProfits, receivables, targets, tabRange.from, tabRange.to]);
 
   // ── 도넛: 유종 4분류 매출 ──
   const donut = useMemo(() => {
@@ -49,7 +84,7 @@ export default function HomePage() {
       cur.set(ymd, (cur.get(ymd) || 0) + r.supplyAmount + r.taxAmount);
     });
 
-    const prev = shiftYearBack(filters.from, filters.to);
+    const prev = shiftYearBack(tabRange.from, tabRange.to);
     const prevMap = new Map<string, number>();
     sales
       .filter((s) => inRange(s.saleDate, prev.from, prev.to))
@@ -71,7 +106,7 @@ export default function HomePage() {
         당기: Math.round((cur.get(k) || 0) / 10000),
         전년: Math.round((prevMap.get(k) || 0) / 10000),
       }));
-  }, [filtered, sales, filters.from, filters.to]);
+  }, [filtered, sales, tabRange.from, tabRange.to]);
 
   // ── 당일 매출 ──
   const today = useMemo(() => todayRevenue(filtered), [filtered]);
@@ -125,9 +160,37 @@ export default function HomePage() {
     <div className="p-4 md:p-6 space-y-5">
       <PageHeader
         title="전체 개요"
-        subtitle={`${filters.from.slice(0, 4)}-${filters.from.slice(4, 6)}-${filters.from.slice(6, 8)} ~ ${filters.to.slice(0, 4)}-${filters.to.slice(4, 6)}-${filters.to.slice(6, 8)}`}
+        subtitle={`${tabRange.label} · ${tabRange.from.slice(0, 4)}-${tabRange.from.slice(4, 6)}-${tabRange.from.slice(6, 8)} ~ ${tabRange.to.slice(0, 4)}-${tabRange.to.slice(4, 6)}-${tabRange.to.slice(6, 8)}`}
         right={showMockNote ? <MockBadge /> : undefined}
       />
+
+      {/* 연도 탭 */}
+      <div className="flex flex-wrap gap-1 border-b border-slate-200">
+        {([
+          { id: "YTD", label: "올해 누적" },
+          { id: "2026", label: "2026" },
+          { id: "2025", label: "2025" },
+          { id: "2024", label: "2024" },
+          { id: "2023", label: "2023" },
+          { id: "ALL", label: "전체" },
+        ] as { id: YearTab; label: string }[]).map((t) => {
+          const active = yearTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setYearTab(t.id)}
+              className={
+                "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors " +
+                (active
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800")
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
       {/* 6개 메인 KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">

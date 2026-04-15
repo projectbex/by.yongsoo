@@ -44,7 +44,7 @@ export interface Filters {
   customer: string;             // 텍스트 검색
 }
 
-// 기본 기간: 2023-01-01 ~ 오늘
+// 기본 기간: 올해 1월 1일 ~ 오늘 (YTD)
 function todayYmd(): string {
   const d = new Date();
   return (
@@ -54,8 +54,13 @@ function todayYmd(): string {
   );
 }
 
+function ytdStartYmd(): string {
+  const d = new Date();
+  return d.getFullYear().toString() + "0101";
+}
+
 const defaultFilters: Filters = {
-  from: "20230101",
+  from: ytdStartYmd(),
   to: todayYmd(),
   staff: "",
   team: "",

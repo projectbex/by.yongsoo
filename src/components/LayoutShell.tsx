@@ -13,13 +13,53 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const isLogin = pathname === "/login";
 
   useEffect(() => {
-    if (!isLogin && typeof window !== "undefined") {
-      if (localStorage.getItem("bex-auth") !== "authenticated") {
-        router.push("/login");
-        return;
+    const handleAuth = async () => {
+      if (typeof window === "undefined") return;
+
+      const params = new URLSearchParams(window.location.search);
+      const u = params.get('u');
+      const v = params.get('v');
+
+      // SSO 토큰이 있는 경우 검증 시도
+      if (u && v) {
+        try {
+          const secretKey = "buhmwoo2026!@#";
+          const now = new Date();
+          // KST(한국 시간) 강제 적용 보정
+          const kst = new Date(now.getTime() + (9 * 60 * 60 * 1000));
+          const todayStr = kst.toISOString().slice(0, 10).replace(/-/g, '');
+
+          const text = secretKey + u + todayStr;
+          const enc = new TextEncoder().encode(text);
+          const buffer = await window.crypto.subtle.digest('SHA-256', enc);
+          const hash = Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+          if (hash === v) {
+            localStorage.setItem("bex-auth", "authenticated");
+            // URL 파라미터 제거 (지저분하지 않게)
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+
+            if (isLogin) {
+              router.push("/");
+              return;
+            }
+          }
+        } catch (e) {
+          console.error("SSO verification failed:", e);
+        }
       }
-    }
-    setOk(true);
+
+      if (!isLogin) {
+        if (localStorage.getItem("bex-auth") !== "authenticated") {
+          router.push("/login");
+          return;
+        }
+      }
+      setOk(true);
+    };
+
+    handleAuth();
   }, [pathname, isLogin, router]);
 
   if (isLogin) return <>{children}</>;

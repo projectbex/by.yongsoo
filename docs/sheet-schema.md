@@ -130,4 +130,35 @@
 
 ---
 
-_저장일: 2026-04-14 · v3.0 BEX SCM BI_
+---
+
+## v3.1 전환 (실데이터 정적 번들)
+
+2026-04-15 이후 구조 변경:
+- 3개 데이터 소스(`영업이익 / 미수 / 목표`)를 Google Sheets가 아닌 **`public/data/*.csv`** 로 번들
+- ERP 익스포트 xlsx → `scripts/extract-data.js` 로 CSV 추출 → 빌드에 포함 → GitHub Pages에서 정적 서빙
+- `src/lib/sheets.ts` 의 `fetchLocalCsv()` 가 basePath(`/bex-scm`) 고려해서 fetch
+- `USE_MOCK_*` = `false` → 로컬 CSV 사용, `true` → mockData 사용
+
+데이터 갱신 절차:
+1. 최신 ERP xlsx를 `C:/Users/BWC-MASTER/Downloads/` 에 저장
+2. `scripts/extract-data.js` 의 `SRC` 경로 확인 후:
+   ```bash
+   npm install --no-save xlsx
+   node scripts/extract-data.js
+   ```
+3. `public/data/profits.csv`, `targets.csv`, `receivables.csv` 갱신됨
+4. `npx next build` → `git commit` → `git push`
+
+## 데이터 특성 (2026-04 기준)
+
+- **영업이익데이터** 15,332 행 (2023-01 ~ 2026-03, 월별 집계)
+  - 거래일자: 각 월의 1일로 통일
+  - 담당자: 개인명이 아닌 **팀명** (영업지원팀 / 유통1~3팀 …)
+  - 원가: `실적금액 − 실적영업이익` 로 역산
+- **목표** 4,573 행 (전체/담당자/유종/거래처 4종 × 39개월)
+- **미수현황** 0 행 (빈 시트, 페이지는 "데이터 없음"으로 안전 표시)
+
+---
+
+_저장일: 2026-04-15 · v3.1 BEX SCM BI_

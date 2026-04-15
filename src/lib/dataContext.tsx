@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 import {
-  fetchSheet, parseSalesSheet, parseCustomerSheet,
+  fetchSheet, fetchLocalCsv,
+  parseSalesSheet, parseCustomerSheet,
   parseProfitSheet, parseReceivableSheet, parseTargetSheet,
   SaleRow, CustomerInfo, ProfitRow, ReceivableRow, TargetRow,
 } from "./sheets";
@@ -11,17 +12,24 @@ import { toMainCategory, type MainCategory } from "./category";
 import { inRange } from "./kpi";
 
 // ─────────────────────────────────────────
-// Mock 사용 플래그
-//   실 시트 연결 시 false 로 바꾸면 즉시 실데이터 사용.
+// 데이터 소스 플래그
+//   false → public/data/*.csv (ERP 익스포트 정적 번들, 2023-01 ~ 2026-03)
+//   true  → lib/mockData.ts 가짜 데이터
 // ─────────────────────────────────────────
-const USE_MOCK_PROFIT = true;
-const USE_MOCK_RECEIVABLE = true;
-const USE_MOCK_TARGET = true;
+const USE_MOCK_PROFIT = false;
+const USE_MOCK_RECEIVABLE = false;
+const USE_MOCK_TARGET = false;
 
-// 실 시트 이름 (연결 시 사용)
-const SHEET_NAME_PROFIT = "영업이익데이터";
-const SHEET_NAME_RECEIVABLE = "미수현황";
-const SHEET_NAME_TARGET = "목표";
+// 로컬 CSV 파일명 (public/data/)
+const LOCAL_FILE_PROFIT = "profits.csv";
+const LOCAL_FILE_RECEIVABLE = "receivables.csv";
+const LOCAL_FILE_TARGET = "targets.csv";
+
+// (추후 구글 시트 직연결 전환 시 아래 이름으로 fetchSheet 호출)
+// const SHEET_NAME_PROFIT = "영업이익데이터";
+// const SHEET_NAME_RECEIVABLE = "미수현황";
+// const SHEET_NAME_TARGET = "목표";
+void fetchSheet; // keep import for future sheet-based path
 
 // ─────────────────────────────────────────
 // Filters
@@ -111,30 +119,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      // 매출 + 거래처 (실 시트)
-      const [salesRows, custRows] = await Promise.all([
-        fetchSheet("매출데이터"),
-        fetchSheet("거래처정보"),
-      ]);
-      const sales = parseSalesSheet(salesRows);
-      const custs = parseCustomerSheet(custRows);
+      // 1) 영업이익 = 실데이터 메인 소스 (ERP 익스포트 정적 CSV)
+      const profits = USE_MOCK_PROFIT
+        ? MOCK_PROFITS
+        : parseProfitSheet(await fetchLocalCsv(LOCAL_FILE_PROFIT));
+
+      // 2) 매출 = 영업이익에서 cost 만 뺀 동일 구조 → 단일 소스 유지로 수치 일관성 보장
+      //    ※ 담당자 필드엔 실제로는 팀명이 들어있음 (ERP 집계 기준).
+      const sales: SaleRow[] = profits.map((p) => ({
+        staff: p.staff,
+        staffCode: p.staffCode,
+        customer: p.customer,
+        customerCode: p.customerCode,
+        saleType: p.saleType,
+        saleDate: p.saleDate,
+        productCode: p.productCode,
+        product: p.product,
+        volume: p.volume,
+        unit: p.unit,
+        quantity: p.quantity,
+        unitPrice: p.unitPrice,
+        supplyAmount: p.supplyAmount,
+        taxAmount: p.taxAmount,
+      }));
+
+      // 3) 거래처정보 (있으면 팀/지역/등급 enrichment, 실패해도 무시)
+      let custs: CustomerInfo[] = [];
+      try {
+        custs = parseCustomerSheet(await fetchSheet("거래처정보"));
+      } catch {
+        custs = [];
+      }
       const map = new Map<string, CustomerInfo>();
       custs.forEach((c) => map.set(c.customer, c));
 
-      // 영업이익
-      const profits = USE_MOCK_PROFIT
-        ? MOCK_PROFITS
-        : parseProfitSheet(await fetchSheet(SHEET_NAME_PROFIT));
-
-      // 미수현황
+      // 4) 미수현황 (현재 빈 파일이어도 파서가 []로 안전 반환)
       const receivables = USE_MOCK_RECEIVABLE
         ? MOCK_RECEIVABLES
-        : parseReceivableSheet(await fetchSheet(SHEET_NAME_RECEIVABLE));
+        : parseReceivableSheet(
+            await fetchLocalCsv(LOCAL_FILE_RECEIVABLE).catch(() => [] as string[][]),
+          );
 
-      // 목표
+      // 5) 목표
       const targets = USE_MOCK_TARGET
         ? MOCK_TARGETS
-        : parseTargetSheet(await fetchSheet(SHEET_NAME_TARGET));
+        : parseTargetSheet(await fetchLocalCsv(LOCAL_FILE_TARGET));
 
       setSales(sales);
       setProfits(profits);

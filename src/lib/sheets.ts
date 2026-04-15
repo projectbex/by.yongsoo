@@ -42,6 +42,21 @@ export async function fetchSheet(sheetName: string): Promise<string[][]> {
   return parseCSV(text);
 }
 
+// ─────────────────────────────────────────
+// 로컬 정적 CSV 로더 (public/data/*.csv)
+// xlsx 익스포트 데이터를 빌드에 번들링해서 Sheets API 없이도 실데이터 제공.
+// GitHub Pages basePath = /bex-scm 고려.
+// ─────────────────────────────────────────
+const BASE_PATH = "/bex-scm"; // next.config.ts 의 basePath 와 동일
+
+export async function fetchLocalCsv(fileName: string): Promise<string[][]> {
+  const url = `${BASE_PATH}/data/${fileName}`;
+  const res = await fetch(url, { cache: "force-cache" });
+  if (!res.ok) throw new Error(`Failed to fetch local csv: ${fileName}`);
+  const text = await res.text();
+  return parseCSV(text);
+}
+
 // 매출데이터 시트 파싱 (3월전체 - 거래 내역)
 export interface SaleRow {
   staff: string;       // 담당자명

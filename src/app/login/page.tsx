@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 const SITE_PASSWORD = "yongsoo2026!";
 
@@ -9,7 +8,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +16,10 @@ export default function LoginPage() {
 
     if (password === SITE_PASSWORD) {
       localStorage.setItem("bex-auth", "authenticated");
-      router.push("/");
+      // 정적 export 환경에서 router.push 는 RSC payload fetch 가 불안정하므로
+      // 풀 리로드로 홈 이동. 현재 URL 의 'login/' 부분을 잘라 basePath 자동 보존.
+      const home = window.location.pathname.replace(/login\/?$/, "") || "/";
+      window.location.assign(home);
     } else {
       setError("비밀번호가 올바르지 않습니다.");
       setLoading(false);

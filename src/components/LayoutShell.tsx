@@ -6,11 +6,16 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import { DataProvider } from "@/lib/dataContext";
 
+// trailingSlash:true 환경에서 usePathname()이 "/login/" 을 반환하므로
+// 양쪽 형태 모두 안전하게 비교하기 위해 끝 슬래시를 제거하고 매칭한다.
+const normalizePath = (p: string | null | undefined): string =>
+  (p || "").replace(/\/+$/, "") || "/";
+
 function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [ok, setOk] = useState(false);
-  const isLogin = pathname === "/login";
+  const isLogin = normalizePath(pathname) === "/login";
 
   useEffect(() => {
     const handleAuth = async () => {
@@ -73,7 +78,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLogin = pathname === "/login";
+  const isLogin = normalizePath(pathname) === "/login";
 
   if (isLogin) return <AuthGate>{children}</AuthGate>;
 

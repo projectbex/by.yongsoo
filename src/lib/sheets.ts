@@ -37,7 +37,7 @@ function parseCSV(csv: string): string[][] {
 // ─────────────────────────────────────────
 // 로컬 정적 CSV 로더 (public/data/*.csv)
 // ─────────────────────────────────────────
-const BASE_PATH = "/projectbex.by.yongsoo"; // next.config.ts basePath
+const BASE_PATH = "/by.yongsoo"; // next.config.ts basePath
 
 export async function fetchLocalCsv(fileName: string): Promise<string[][]> {
   const url = `${BASE_PATH}/data/${fileName}`;

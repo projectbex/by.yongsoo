@@ -6,19 +6,15 @@ import { fmt, fmtKrw } from "@/lib/format";
 import { PageHeader, ChartCard, LoadingState, ErrorState, CHART_COLORS, TOOLTIP_STYLE } from "@/components/ui";
 import { useMemo } from "react";
 
-function extractCategory(p: string): string {
-  return (p.split(" ")[0] || "기타");
-}
-
 export default function CategoryAnalysisPage() {
   const { filtered, loading, error, reload } = useData();
 
   const data = useMemo(() => {
     const m = new Map<string, { amt: number; qty: number; count: number }>();
     filtered.forEach((r) => {
-      const c = extractCategory(r.product);
+      const c = r.category || "미지정";
       const e = m.get(c) || { amt: 0, qty: 0, count: 0 };
-      e.amt += r.supplyAmount + r.taxAmount;
+      e.amt += r.revenue;
       e.qty += r.quantity;
       e.count += 1;
       m.set(c, e);
@@ -41,7 +37,7 @@ export default function CategoryAnalysisPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-5">
-      <PageHeader title="유종별 분석" subtitle="제품군별 매출 및 점유율" />
+      <PageHeader title="유종별 분석" subtitle="ERP 유종대분류 기준 매출 및 점유율" />
 
       <ChartCard title="유종별 매출 순위" subtitle="단위: 만원">
         <ResponsiveContainer width="100%" height={Math.max(300, data.length * 36)}>

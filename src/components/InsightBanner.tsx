@@ -14,7 +14,7 @@ export default function InsightBanner({ sales }: Props) {
   const prodMap = new Map<string, number>();
   sales.forEach((s) => {
     const n = s.product || "기타";
-    prodMap.set(n, (prodMap.get(n) || 0) + s.supplyAmount + s.taxAmount);
+    prodMap.set(n, (prodMap.get(n) || 0) + s.revenue);
   });
   const sorted = [...prodMap.entries()].sort((a, b) => b[1] - a[1]);
   const topProduct = sorted[0]?.[0] || "";
@@ -23,7 +23,7 @@ export default function InsightBanner({ sales }: Props) {
   // 하위 상품
   const bottomProduct = sorted.length > 1 ? sorted[sorted.length - 1]?.[0] : "";
 
-  const totalAmt = sales.reduce((s, d) => s + d.supplyAmount + d.taxAmount, 0);
+  const totalAmt = sales.reduce((s, d) => s + d.revenue, 0);
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-violet-50 border border-blue-100 rounded-2xl p-4">

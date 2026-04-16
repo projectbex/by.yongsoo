@@ -15,7 +15,7 @@ export default function ProductAnalysisPage() {
     const m = new Map<string, { amt: number; qty: number; count: number }>();
     filtered.forEach((r) => {
       const e = m.get(r.product) || { amt: 0, qty: 0, count: 0 };
-      e.amt += r.supplyAmount + r.taxAmount;
+      e.amt += r.revenue;
       e.qty += r.quantity;
       e.count += 1;
       m.set(r.product, e);

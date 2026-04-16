@@ -6,34 +6,27 @@ import { PageHeader, ChartCard, LoadingState, ErrorState } from "@/components/ui
 import { useMemo, useState } from "react";
 
 export default function CustomerPage() {
-  const { filtered, customerMap, loading, error, reload } = useData();
+  const { filtered, loading, error, reload } = useData();
   const [query, setQuery] = useState("");
 
   const data = useMemo(() => {
-    const m = new Map<string, { amt: number; qty: number; count: number }>();
+    const m = new Map<string, { amt: number; qty: number; count: number; team: string }>();
     filtered.forEach((r) => {
-      const e = m.get(r.customer) || { amt: 0, qty: 0, count: 0 };
-      e.amt += r.supplyAmount + r.taxAmount;
+      const e = m.get(r.customer) || { amt: 0, qty: 0, count: 0, team: r.team };
+      e.amt += r.revenue;
       e.qty += r.quantity;
       e.count += 1;
       m.set(r.customer, e);
     });
     const rows = [...m.entries()]
-      .map(([name, v]) => {
-        const info = customerMap.get(name);
-        return {
-          name,
-          ...v,
-          staff: info?.staff || "-",
-          team: info?.team || "-",
-          region: info?.region || "-",
-          grade: info?.grade || "-",
-        };
-      })
+      .map(([name, v]) => ({
+        name,
+        ...v,
+      }))
       .sort((a, b) => b.amt - a.amt);
     const q = query.trim().toLowerCase();
     return q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
-  }, [filtered, customerMap, query]);
+  }, [filtered, query]);
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -56,9 +49,7 @@ export default function CustomerPage() {
               <tr className="border-b border-slate-200">
                 <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">#</th>
                 <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">거래처</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">담당</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">지역</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">등급</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">팀</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">건수</th>
@@ -69,9 +60,7 @@ export default function CustomerPage() {
                 <tr key={r.name} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="py-2 px-2 text-xs text-slate-500">{i + 1}</td>
                   <td className="py-2 px-2 text-xs text-slate-900 font-medium max-w-[180px] truncate">{r.name}</td>
-                  <td className="py-2 px-2 text-xs text-slate-500">{r.staff}</td>
-                  <td className="py-2 px-2 text-xs text-slate-500">{r.region}</td>
-                  <td className="py-2 px-2 text-xs text-emerald-600">{r.grade}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500">{r.team || "-"}</td>
                   <td className="py-2 px-2 text-xs text-blue-600 text-right whitespace-nowrap">{fmtKrw(r.amt)}</td>
                   <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.qty)}</td>
                   <td className="py-2 px-2 text-xs text-slate-500 text-right">{fmt(r.count)}</td>

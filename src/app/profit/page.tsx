@@ -6,39 +6,37 @@ import {
 } from "recharts";
 import { useData } from "@/lib/dataContext";
 import {
-  PageHeader, ChartCard, LoadingState, ErrorState, Tabs, MockBadge,
-  TOOLTIP_STYLE, AXIS_STYLE, GRID_STROKE,
+  PageHeader, ChartCard, LoadingState, ErrorState, Tabs,
+  TOOLTIP_STYLE, AXIS_STYLE, GRID_STROKE, CHART_COLORS,
 } from "@/components/ui";
 import KpiCard from "@/components/KpiCard";
 import { fmt, fmtKrw, fmtPct, fmtPctOrNull } from "@/lib/format";
 import { revenue, profit as sumProfit, marginPct, yoy, shiftYearBack, inRange, sumTargetProfit, achievement } from "@/lib/kpi";
 import { summarizeProfit, type ProfitGroupKey } from "@/lib/profit";
-import { CATEGORY_COLOR } from "@/lib/category";
 
 type TabId = ProfitGroupKey;
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "category", label: "유종별" },
-  { id: "staff", label: "담당자별" },
+  { id: "team", label: "팀별" },
   { id: "customer", label: "거래처별" },
 ];
 
 export default function ProfitPage() {
-  const { profits, filteredProfits, targets, filters, loading, error, reload, usingMock } = useData();
+  const { sales, filtered, targets, filters, loading, error, reload } = useData();
   const [tab, setTab] = useState<TabId>("category");
 
-  // 상단 KPI: 매출/영업이익/이익률/목표달성률/동기비
   const top = useMemo(() => {
-    const rev = revenue(filteredProfits);
-    const prf = sumProfit(filteredProfits);
+    const rev = revenue(filtered);
+    const prf = sumProfit(filtered);
     const mp = marginPct(prf, rev);
 
     const prev = shiftYearBack(filters.from, filters.to);
-    const prv = profits.filter((p) => inRange(p.saleDate, prev.from, prev.to));
+    const prv = sales.filter((p) => inRange(p.date, prev.from, prev.to));
     const prevRev = revenue(prv);
     const prevPrf = sumProfit(prv);
 
-    const targetProfit = sumTargetProfit(targets, filters.from, filters.to, "전체", "-");
+    const targetProfit = sumTargetProfit(targets, filters.from, filters.to);
     const ach = achievement(prf, targetProfit);
 
     return {
@@ -48,16 +46,15 @@ export default function ProfitPage() {
       targetProfit,
       ach,
     };
-  }, [profits, filteredProfits, targets, filters.from, filters.to]);
+  }, [sales, filtered, targets, filters.from, filters.to]);
 
-  // 탭별 그룹 요약
   const summary = useMemo(() => summarizeProfit({
-    rows: profits,
+    rows: sales,
     targets,
     from: filters.from,
     to: filters.to,
     group: tab,
-  }), [profits, targets, filters.from, filters.to, tab]);
+  }), [sales, targets, filters.from, filters.to, tab]);
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -66,11 +63,9 @@ export default function ProfitPage() {
     <div className="p-4 md:p-6 space-y-5">
       <PageHeader
         title="영업이익 분석"
-        subtitle="유종 / 담당자 / 거래처 차원별 수익성"
-        right={(usingMock.profit || usingMock.target) ? <MockBadge /> : undefined}
+        subtitle="유종 / 팀 / 거래처 차원별 수익성"
       />
 
-      {/* 상단 KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         <KpiCard label="매출" value={fmtKrw(top.rev)} icon="💰" accent="blue"
           delta={top.yoyRev} deltaLabel="전년동기" />
@@ -84,10 +79,8 @@ export default function ProfitPage() {
           delta={top.ach} deltaFallback="목표 없음" />
       </div>
 
-      {/* 탭 */}
       <Tabs<TabId> tabs={TABS} active={tab} onChange={setTab} />
 
-      {/* 차트: 영업이익 막대 */}
       <ChartCard
         title={`${TABS.find((t) => t.id === tab)?.label} 영업이익`}
         subtitle={`총 ${summary.length}개 항목 · 영업이익 내림차순`}
@@ -105,15 +98,8 @@ export default function ProfitPage() {
                 formatter={(v) => [fmt(Number(v)) + "만원", "영업이익"]}
               />
               <Bar dataKey="profitMan" radius={[0, 6, 6, 0]}>
-                {summary.map((s, i) => (
-                  <Cell
-                    key={s.key}
-                    fill={
-                      tab === "category" && s.key in CATEGORY_COLOR
-                        ? CATEGORY_COLOR[s.key as keyof typeof CATEGORY_COLOR]
-                        : ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316"][i % 8]
-                    }
-                  />
+                {summary.map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
@@ -121,7 +107,6 @@ export default function ProfitPage() {
         )}
       </ChartCard>
 
-      {/* 표 */}
       <ChartCard title="상세 표">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -133,8 +118,6 @@ export default function ProfitPage() {
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">이익률</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">동기비(매출)</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">동기비(이익)</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">목표 이익</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">달성률</th>
               </tr>
             </thead>
             <tbody>
@@ -149,10 +132,6 @@ export default function ProfitPage() {
                   </td>
                   <td className={`py-2 px-2 text-xs text-right ${s.yoyProfitPct === null ? "text-slate-400" : s.yoyProfitPct >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {fmtPctOrNull(s.yoyProfitPct)}
-                  </td>
-                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{s.target > 0 ? fmtKrw(s.target) : "—"}</td>
-                  <td className={`py-2 px-2 text-xs text-right font-medium ${s.achievementPct === null ? "text-slate-400" : s.achievementPct >= 100 ? "text-emerald-600" : "text-amber-600"}`}>
-                    {s.achievementPct === null ? "목표 없음" : fmtPct(s.achievementPct)}
                   </td>
                 </tr>
               ))}

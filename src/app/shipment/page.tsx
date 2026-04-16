@@ -13,8 +13,8 @@ export default function ShipmentPage() {
 
   const rows = useMemo(() => {
     const sorted = [...filtered].sort((a, b) => {
-      const da = a.saleDate.replace(/[^0-9]/g, "");
-      const db = b.saleDate.replace(/[^0-9]/g, "");
+      const da = a.date.replace(/[^0-9]/g, "");
+      const db = b.date.replace(/[^0-9]/g, "");
       return db.localeCompare(da);
     });
     const q = query.trim().toLowerCase();
@@ -22,12 +22,12 @@ export default function ShipmentPage() {
       ? sorted.filter((r) =>
           r.customer.toLowerCase().includes(q) ||
           r.product.toLowerCase().includes(q) ||
-          r.staff.toLowerCase().includes(q)
+          r.team.toLowerCase().includes(q)
         )
       : sorted;
   }, [filtered, query]);
 
-  const totalAmt = useMemo(() => filtered.reduce((s, r) => s + r.supplyAmount + r.taxAmount, 0), [filtered]);
+  const totalAmt = useMemo(() => filtered.reduce((s, r) => s + r.revenue, 0), [filtered]);
   const totalQty = useMemo(() => filtered.reduce((s, r) => s + r.quantity, 0), [filtered]);
 
   if (loading) return <LoadingState />;
@@ -47,7 +47,7 @@ export default function ShipmentPage() {
       <ChartCard title="출고 내역" subtitle={`${fmt(rows.length)}건 · 최신순`}>
         <input
           type="text"
-          placeholder="거래처/품목/담당자 검색"
+          placeholder="거래처/품목/팀 검색"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setLimit(50); }}
           className="mb-4 w-full md:w-80 bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2 outline-none focus:border-blue-500"
@@ -56,8 +56,8 @@ export default function ShipmentPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">일자</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">담당</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">기간</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">팀</th>
                 <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">거래처</th>
                 <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">품목</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
@@ -67,13 +67,17 @@ export default function ShipmentPage() {
             <tbody>
               {rows.slice(0, limit).map((r, i) => (
                 <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-2 px-2 text-xs text-slate-500 whitespace-nowrap">{r.saleDate}</td>
-                  <td className="py-2 px-2 text-xs text-slate-700">{r.staff}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500 whitespace-nowrap">
+                    {r.date.length === 8
+                      ? `${r.date.slice(0, 4)}-${r.date.slice(4, 6)}`
+                      : r.date}
+                  </td>
+                  <td className="py-2 px-2 text-xs text-slate-700">{r.team}</td>
                   <td className="py-2 px-2 text-xs text-slate-900 max-w-[140px] truncate">{r.customer}</td>
                   <td className="py-2 px-2 text-xs text-slate-700 max-w-[160px] truncate">{r.product}</td>
                   <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(r.quantity)}</td>
                   <td className="py-2 px-2 text-xs text-blue-600 font-medium text-right whitespace-nowrap">
-                    {fmt(r.supplyAmount + r.taxAmount)}원
+                    {fmtKrw(r.revenue)}
                   </td>
                 </tr>
               ))}

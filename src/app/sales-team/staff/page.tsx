@@ -6,18 +6,19 @@ import { fmt, fmtKrw } from "@/lib/format";
 import { PageHeader, ChartCard, LoadingState, ErrorState, CHART_COLORS, TOOLTIP_STYLE } from "@/components/ui";
 import { useMemo } from "react";
 
-export default function StaffPage() {
+export default function TeamPerformancePage() {
   const { filtered, loading, error, reload } = useData();
 
   const data = useMemo(() => {
     const m = new Map<string, { amt: number; qty: number; count: number; customers: Set<string> }>();
     filtered.forEach((r) => {
-      const e = m.get(r.staff) || { amt: 0, qty: 0, count: 0, customers: new Set<string>() };
-      e.amt += r.supplyAmount + r.taxAmount;
+      const team = r.team || "미지정";
+      const e = m.get(team) || { amt: 0, qty: 0, count: 0, customers: new Set<string>() };
+      e.amt += r.revenue;
       e.qty += r.quantity;
       e.count += 1;
       e.customers.add(r.customer);
-      m.set(r.staff, e);
+      m.set(team, e);
     });
     return [...m.entries()]
       .sort((a, b) => b[1].amt - a[1].amt)
@@ -36,10 +37,10 @@ export default function StaffPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-5">
-      <PageHeader title="담당자별 성과" subtitle={`총 ${data.length}명`} />
+      <PageHeader title="팀별 성과" subtitle={`총 ${data.length}개 팀`} />
 
-      <ChartCard title="담당자별 매출" subtitle="단위: 만원">
-        <ResponsiveContainer width="100%" height={Math.max(300, data.length * 32)}>
+      <ChartCard title="팀별 매출" subtitle="단위: 만원">
+        <ResponsiveContainer width="100%" height={Math.max(300, data.length * 40)}>
           <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
             <XAxis type="number" tick={{ fill: "#64748B", fontSize: 11 }} axisLine={false} tickFormatter={(v) => fmt(v)} />
@@ -54,13 +55,13 @@ export default function StaffPage() {
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard title="담당자별 상세" subtitle="매출 · 수량 · 건수 · 거래처">
+      <ChartCard title="팀별 상세" subtitle="매출 · 수량 · 건수 · 거래처">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">#</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">담당자</th>
+                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">팀</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
                 <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">건수</th>

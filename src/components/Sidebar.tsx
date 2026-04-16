@@ -23,14 +23,14 @@ const MENU: MenuItem[] = [
     children: [
       { href: "/analysis/category", label: "유종별 분석" },
       { href: "/analysis/product", label: "품목별 분석" },
-      { href: "/analysis/region", label: "지역별 분석" },
+      { href: "/analysis/region", label: "팀별 분석" },
     ],
   },
   {
     label: "영업 분석",
     icon: "👤",
     children: [
-      { href: "/sales-team/staff", label: "담당자별 성과" },
+      { href: "/sales-team/staff", label: "팀별 성과" },
       { href: "/sales-team/customer", label: "거래처 분석" },
     ],
   },

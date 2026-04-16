@@ -90,14 +90,6 @@ export function Tabs<T extends string>({
   );
 }
 
-export function MockBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-0.5">
-      <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" /> MOCK
-    </span>
-  );
-}
-
 export const CHART_COLORS = [
   "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
   "#EC4899", "#06B6D4", "#F97316", "#84CC16", "#6B7280",

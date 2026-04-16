@@ -1,26 +1,37 @@
-// ── 유종 대분류 (메인 4버킷) ──
-// 규칙 (사용자 확정):
-//   product 에 "WD"     포함 → "WD-40"
-//   product 에 "케이블타이" 포함 → "케이블타이"
-//   product 에 "방진복"  포함 → "방진복"
-//   그 외                       → "기타"
+// ── 유종 카테고리 (ERP category 필드 기준) ──
+// 통합데이터.csv 의 category 컬럼을 그대로 사용.
+// 도넛 차트/색상용 유틸.
 
-export type MainCategory = "WD-40" | "케이블타이" | "방진복" | "기타";
+// 도넛 차트 색상 팔레트 (최대 12개, 초과 시 순환)
+const PALETTE = [
+  "#3B82F6", "#10B981", "#F59E0B", "#EF4444",
+  "#8B5CF6", "#EC4899", "#06B6D4", "#F97316",
+  "#84CC16", "#14B8A6", "#A855F7", "#E11D48",
+];
 
-export const MAIN_CATEGORIES: MainCategory[] = ["WD-40", "케이블타이", "방진복", "기타"];
-
-export function toMainCategory(product: string): MainCategory {
-  const p = (product || "").toUpperCase();
-  if (p.includes("WD")) return "WD-40";
-  if (product.includes("케이블타이")) return "케이블타이";
-  if (product.includes("방진복")) return "방진복";
-  return "기타";
+export function getCategoryColor(index: number): string {
+  return PALETTE[index % PALETTE.length];
 }
 
-// 색상 고정 매핑 (도넛/바 공통)
-export const CATEGORY_COLOR: Record<MainCategory, string> = {
-  "WD-40": "#3B82F6",
-  "케이블타이": "#10B981",
-  "방진복": "#F59E0B",
-  "기타": "#94A3B8",
-};
+/** SaleRow[] 에서 고유 카테고리 목록 추출 (매출 내림차순) */
+export function extractCategories(rows: Array<{ category: string; revenue: number }>): string[] {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    map.set(r.category, (map.get(r.category) || 0) + r.revenue);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([c]) => c);
+}
+
+/** 카테고리별 매출 집계 */
+export function revenueByCategory(rows: Array<{ category: string; revenue: number }>): Array<{ name: string; value: number }> {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    map.set(r.category, (map.get(r.category) || 0) + r.revenue);
+  }
+  return [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => ({ name, value: Math.round(value) }))
+    .filter((d) => d.value > 0);
+}

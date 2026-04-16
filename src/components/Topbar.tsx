@@ -21,13 +21,13 @@ function todayYmd(): string {
 }
 
 export default function Topbar() {
-  const { filters, setFilters, staffList, teamList, categoryList } = useData();
+  const { filters, setFilters, teamList, categoryList } = useData();
 
   const set = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     setFilters({ ...filters, [key]: value });
 
   const hasNonDateFilter =
-    filters.staff || filters.team || filters.category || filters.product || filters.customer;
+    filters.team || filters.category || filters.product || filters.customer;
 
   const inputCls =
     "bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-1.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none";
@@ -63,18 +63,10 @@ export default function Topbar() {
           ))}
         </select>
 
-        {/* 담당자 */}
-        <select value={filters.staff} onChange={(e) => set("staff", e.target.value)} className={inputCls}>
-          <option value="">전체 담당자</option>
-          {staffList.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-
         {/* 유종 (대분류) */}
         <select
           value={filters.category}
-          onChange={(e) => set("category", e.target.value as Filters["category"])}
+          onChange={(e) => set("category", e.target.value)}
           className={inputCls}
         >
           <option value="">전체 유종</option>
@@ -108,7 +100,6 @@ export default function Topbar() {
               setFilters({
                 from: filters.from,
                 to: filters.to,
-                staff: "",
                 team: "",
                 category: "",
                 product: "",

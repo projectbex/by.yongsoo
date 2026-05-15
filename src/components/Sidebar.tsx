@@ -49,6 +49,25 @@ const MENU: MenuItem[] = [
     icon: "📦",
     children: [{ href: "/shipment", label: "출고 현황" }],
   },
+  {
+    label: "KPI 시뮬레이터",
+    icon: "⭐",
+    children: [
+      { href: "/kpi", label: "KPI 종합" },
+      { href: "/kpi/simulator", label: "산식 시뮬레이터" },
+    ],
+  },
+  {
+    label: "SCM 운영",
+    icon: "🏷️",
+    children: [
+      { href: "/scm/products", label: "상품마스터" },
+      { href: "/scm/vendors", label: "거래처" },
+      { href: "/scm/boms", label: "BOM 관리" },
+      { href: "/scm/supply-items", label: "소모품" },
+      { href: "/scm/purchase-orders", label: "발주 관리" },
+    ],
+  },
 ];
 
 export default function Sidebar() {
@@ -135,7 +154,7 @@ export default function Sidebar() {
             { href: "/analysis/category", icon: "📈", label: "분석" },
             { href: "/profit", icon: "💰", label: "이익" },
             { href: "/receivables", icon: "⚠️", label: "미수" },
-            { href: "/shipment", icon: "📦", label: "출고" },
+            { href: "/kpi", icon: "⭐", label: "KPI" },
           ].map((item) => (
             <Link
               key={item.href}

@@ -2,12 +2,24 @@
 
 import React from "react";
 
+/*
+ * Phase 1 UX 가독성 개선 (2026-05-22)
+ * PageHeader 변경:
+ *   - 제목: text-xl/text-2xl → text-2xl (24px 고정)
+ *   - 부제: text-xs → text-sm (14px)
+ * ChartCard 변경:
+ *   - padding: p-5 → p-6 (24px)
+ *   - 제목: text-sm → text-lg (18px)
+ *   - 부제: text-[11px] → text-xs (12px)
+ *   - 제목 하단 여백: mb-4 → mb-5
+ */
+
 export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-slate-900">{title}</h1>
-        {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h1>
+        {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
       </div>
       {right && <div>{right}</div>}
     </div>
@@ -24,12 +36,12 @@ export function ChartCard({
   right?: React.ReactNode;
 }) {
   return (
-    <div className={`bg-white rounded-2xl p-5 border border-slate-200 shadow-sm ${className}`}>
+    <div className={`bg-white rounded-2xl p-6 border border-slate-200 shadow-sm ${className}`}>
       {(title || subtitle || right) && (
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
-            {subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>}
+            {title && <h3 className="text-lg font-semibold text-slate-900">{title}</h3>}
+            {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
           </div>
           {right && <div>{right}</div>}
         </div>

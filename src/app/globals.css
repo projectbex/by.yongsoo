@@ -21,8 +21,22 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* 모바일 테이블 */
+/*
+ * Phase 1 UX 가독성 개선 (2026-05-22)
+ * 모바일 반응형 처리 강화:
+ *   - 테이블 셀 padding/font 조정
+ *   - KPI 숫자 모바일 크기 축소 (28-32px)
+ *   - 페이지 헤더 모바일 크기 축소
+ */
+
+/* 모바일 테이블 — padding 유지하면서 가독성 확보 */
 @media (max-width: 768px) {
+  table { font-size: 13px; }
+  th, td { padding: 8px 10px !important; }
+}
+
+/* 작은 모바일 (390px 이하) — 1열 레이아웃 */
+@media (max-width: 390px) {
   table { font-size: 12px; }
   th, td { padding: 6px 8px !important; }
 }

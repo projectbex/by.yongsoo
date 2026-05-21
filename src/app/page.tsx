@@ -120,8 +120,15 @@ export default function HomePage() {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
 
+  {/*
+   * Phase 1 UX 가독성 개선 (2026-05-22)
+   * 페이지 레이아웃 변경:
+   *   - 좌우 padding: p-4/p-6 → px-4 md:px-8 py-6 md:py-8
+   *   - 섹션 간격: space-y-5 → space-y-8
+   *   - 최대 너비: max-w-[1440px] 추가
+   */}
   return (
-    <div className="p-4 md:p-6 space-y-5">
+    <div className="px-4 md:px-8 py-6 md:py-8 space-y-8 max-w-[1440px] mx-auto">
       <PageHeader
         title="전체 개요"
         subtitle={`${tabRange.label} · ${tabRange.from.slice(0, 4)}-${tabRange.from.slice(4, 6)}-${tabRange.from.slice(6, 8)} ~ ${tabRange.to.slice(0, 4)}-${tabRange.to.slice(4, 6)}-${tabRange.to.slice(6, 8)}`}
@@ -155,10 +162,14 @@ export default function HomePage() {
         })}
       </div>
 
-      {/* 6개 메인 KPI */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+      {/*
+       * 6개 메인 KPI — Phase 1 UX 개선
+       * 변경: gap-3/4 → gap-5, grid-cols-2/3 → grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+       * 총매출/영업이익은 size="large" (40px 숫자)
+       */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <KpiCard label="총 매출" value={fmtKrw(kpi.totalRevenue)} icon="💰" accent="blue"
-          delta={kpi.yoyRevenuePct} deltaLabel="전년동기" />
+          delta={kpi.yoyRevenuePct} deltaLabel="전년동기" size="large" />
         <KpiCard label="목표 매출" value={fmtKrw(kpi.targetRevenue)} icon="🎯" accent="violet"
           deltaFallback={kpi.targetRevenue > 0 ? "목표 설정됨" : "목표 없음"} delta={null} />
         <KpiCard label="목표 대비 실적" value={kpi.achievementPct === null ? "—" : fmtPct(kpi.achievementPct)} icon="📊" accent="emerald"
@@ -166,13 +177,13 @@ export default function HomePage() {
         <KpiCard label="동기비 실적" value={kpi.yoyRevenuePct === null ? "—" : fmtPct(kpi.yoyRevenuePct)} icon="📈" accent="blue"
           delta={kpi.yoyRevenuePct} deltaLabel="vs 전년" />
         <KpiCard label="영업이익" value={fmtKrw(kpi.totalProfit)} icon="💵" accent="emerald"
-          delta={kpi.profitYoyPct} deltaLabel="전년동기" />
+          delta={kpi.profitYoyPct} deltaLabel="전년동기" size="large" />
         <KpiCard label="현재 미수금" value={fmtKrw(kpi.totalReceivable)} icon="⚠️" accent="red"
           deltaFallback="전체 잔액" delta={null} />
       </div>
 
-      {/* 도넛 + 영업이익 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* 도넛 + 영업이익 — gap 4→5 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChartCard title="유종별 매출 비중" subtitle="ERP 유종대분류 기준">
           {donut.length === 0 ? (
             <div className="text-center text-sm text-slate-400 py-12">데이터 없음</div>
@@ -191,18 +202,22 @@ export default function HomePage() {
           )}
         </ChartCard>
 
+        {/*
+         * 영업이익 카드 — Phase 1 UX 개선
+         * 변경: 숫자 크기 3xl→4xl, 보조텍스트 xs→sm, 이익률 2xl→3xl
+         */}
         <ChartCard title="영업이익 / 이익률" subtitle="기간 합산">
-          <div className="flex flex-col items-center justify-center h-[300px] gap-2">
-            <div className="text-3xl font-bold text-emerald-600">{fmtKrw(profitTotal)}</div>
-            <div className="text-xs text-slate-500">매출 {fmtKrw(kpi.totalRevenue)} 중</div>
-            <div className="text-2xl font-semibold text-slate-700 mt-2">
+          <div className="flex flex-col items-center justify-center h-[300px] gap-3">
+            <div className="text-4xl font-bold text-emerald-600" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(profitTotal)}</div>
+            <div className="text-sm text-slate-500">매출 {fmtKrw(kpi.totalRevenue)} 중</div>
+            <div className="text-3xl font-semibold text-slate-700 mt-2" style={{ fontVariantNumeric: "tabular-nums" }}>
               {kpi.totalRevenue > 0 ? ((profitTotal / kpi.totalRevenue) * 100).toFixed(1) + "%" : "—"}
             </div>
-            <div className="text-[11px] text-slate-400">이익률</div>
-            <div className="w-full max-w-[200px] h-px bg-slate-200 my-1" />
-            <div className="text-[11px] text-slate-500">
+            <div className="text-xs text-slate-400">이익률</div>
+            <div className="w-full max-w-[200px] h-px bg-slate-200 my-2" />
+            <div className="text-sm text-slate-500">
               전년동기 대비:{" "}
-              <span className={kpi.profitYoyPct === null ? "text-slate-400" : kpi.profitYoyPct >= 0 ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
+              <span className={kpi.profitYoyPct === null ? "text-slate-400" : kpi.profitYoyPct >= 0 ? "text-emerald-600 font-semibold" : "text-red-600 font-semibold"}>
                 {kpi.profitYoyPct === null ? "—" : fmtPct(kpi.profitYoyPct)}
               </span>
             </div>
@@ -238,27 +253,32 @@ export default function HomePage() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* 거래처 순위 */}
+      {/*
+       * 거래처 순위 — Phase 1 UX 개선
+       * 변경: 헤더 text-[11px]→text-[13px], 본문 text-xs→text-[13px]
+       * padding: py-2 px-2 → py-3 px-4
+       * 매출 숫자 색상: text-blue-600 → text-slate-900 (차분하게)
+       */}
       <ChartCard title="거래처 순위" subtitle={`매출 기준 · 전체 ${customerRank.length}곳`}>
         <div className="overflow-x-auto max-h-[480px]">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white z-10">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-[#F7F8FA] z-10">
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">#</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">거래처</th>
-                <th className="text-left py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">팀</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">수량</th>
-                <th className="text-right py-2 px-2 text-[11px] font-semibold text-slate-500 uppercase">매출</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">#</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">거래처</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">팀</th>
+                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">수량</th>
+                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">매출</th>
               </tr>
             </thead>
             <tbody>
               {customerRank.map((c) => (
-                <tr key={c.customer} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-2 px-2 text-xs text-slate-400">{c.rank}</td>
-                  <td className="py-2 px-2 text-xs text-slate-900 font-medium max-w-[180px] truncate">{c.customer}</td>
-                  <td className="py-2 px-2 text-xs text-slate-500">{c.team}</td>
-                  <td className="py-2 px-2 text-xs text-slate-700 text-right">{fmt(c.qty)}</td>
-                  <td className="py-2 px-2 text-xs text-blue-600 font-semibold text-right whitespace-nowrap">{fmtKrw(c.amt)}</td>
+                <tr key={c.customer} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-4 text-[13px] text-slate-400">{c.rank}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-900 font-medium max-w-[220px] truncate">{c.customer}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-500">{c.team}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-700 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{fmt(c.qty)}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-900 font-semibold text-right whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(c.amt)}</td>
                 </tr>
               ))}
             </tbody>

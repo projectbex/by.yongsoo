@@ -4,17 +4,16 @@
 > **작업 도구**: Claude Code
 > **대상 프로젝트**: bex-scm (BEX SCM BI v3.1)
 > **작업일**: 2026-05-13 (갱신: 2026-05-15)
-> **문서 버전**: v2.0 (기존 대시보드 + VTPL SCM 화면가이드 통합)
-> **목적**: VTPL SCM 5개 화면을 BEX 대시보드에 통합하여 단일 운영 시스템 구축
-> **원본 참조**: 송지민 PM(VTPL) — my.vtpl.kr SCM 화면 설계
+> **문서 버전**: v2.0 (기존 대시보드 + SCM 화면가이드 통합)
+> **목적**: SCM 5개 화면을 BEX 대시보드에 통합하여 단일 운영 시스템 구축
 
 ---
 
 ## 1. 프로젝트 목표
 
-기존 BEX 대시보드는 매출/이익/미수 시각화에 특화되어 있고, 운영 데이터(상품·거래처·BOM·발주)는 별도 시스템(VTPL SCM)에 있다. 이를 BEX 대시보드 안으로 통합하여 **단일 시스템에서 모든 운영 데이터를 관리**한다.
+기존 BEX 대시보드는 매출/이익/미수 시각화에 특화되어 있고, 운영 데이터(상품·거래처·BOM·발주)는 별도 관리되고 있다. 이를 BEX 대시보드 안으로 통합하여 **단일 시스템에서 모든 운영 데이터를 관리**한다.
 
-VTPL SCM의 5개 화면 설계를 그대로 차용하여 BEX 대시보드 안에 SCM 섹션을 신규 구축한다.
+SCM 5개 화면 설계를 BEX 대시보드 안에 SCM 섹션으로 신규 구축한다.
 
 ---
 
@@ -388,7 +387,7 @@ KPI 시뮬레이터
 │ │ # │ 종류    │ 품목명     │ 수량 │ 단가   │ 합계  │상태││
 │ │ 1 │ 상품    │ S-EGF…    │5,000│ ₩2,921│₩14,605│ ▼ ││
 │ │   │ 입고 기록 펼침: ↓                                  ││
-│ │   │   5/20 입고 2,000개 (송지민) [✕]                   ││
+│ │   │   5/20 입고 2,000개 (담당자A) [✕]                   ││
 │ │   │   [+ 입고 추가]                                     ││
 │ │ 2 │ 부자재  │ 봉합라벨  │5,000│ ₩50   │ ₩250  │ ▼ ││
 │ │ 3 │ 소모품  │ 택배박스   │ 100 │ ₩350  │₩35,000│ ▼ ││
@@ -658,7 +657,7 @@ export interface Inbound {
 
 ## 15. Phase 2에서 하지 말 것
 
-1. 실제 DB 연동 (VTPL DB / Google Sheets / Supabase) — Phase 3
+1. 실제 DB 연동 (Google Sheets / Supabase) — Phase 3
 2. 엑셀 업/다운로드 실제 동작 — Phase 3
 3. PDF 다운로드 — Phase 3
 4. 발주서 PO번호 영구 저장 — Phase 3
@@ -667,19 +666,13 @@ export interface Inbound {
 
 ---
 
-## 16. 참고: VTPL SCM 원본 설계
+## 16. 참고: SCM 원본 설계
 
-원본은 송지민 PM(VTPL)이 my.vtpl.kr에 구축한 SCM 시스템.
-본 작업은 그 화면 설계를 BEX 대시보드 안에 그대로 차용한다.
+본 작업은 기존 SCM 화면 설계를 BEX 대시보드 안에 그대로 차용한다.
 
-**VTPL 기술 스택 (참고용)**:
+**참고 기술 스택**:
 - Next.js 16 (App Router) + React Server Components
-- PostgreSQL + Prisma ORM
-- Supabase Auth (Google SSO)
-- Tailwind CSS + Vercel 배포
-- 3중 권한 가드: page.tsx → API route → Server Action
-
-VTPL SCM은 별도 시스템으로 그대로 운영 유지 (이 작업과 무관).
+- Tailwind CSS + GitHub Pages 배포
 
 ---
 

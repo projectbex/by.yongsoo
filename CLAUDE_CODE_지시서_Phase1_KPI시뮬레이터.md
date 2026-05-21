@@ -645,7 +645,7 @@ npm run build  # 에러 0
 
 1. 신 KPI 산식 (Track A 환율 보정 / Track B 다이소식) — Phase 2
 2. 신상품 18종 트래커 — Phase 2
-3. VTPL SCM 데이터 연동 (협력사 등급제) — Phase 3
+3. SCM 데이터 연동 (협력사 등급제) — Phase 3
 4. 외부 변수 입력 폼 (환율/품질/PR ROI) — Phase 4
 5. 다른 법인(BWI/BW/KCC 등) 데이터 — 별도 데이터 소스 확보 후
 6. 모바일 전용 별도 화면 — 반응형으로 충분

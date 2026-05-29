@@ -36,7 +36,7 @@ export function ChartCard({
   right?: React.ReactNode;
 }) {
   return (
-    <div className={`bg-white rounded-2xl p-6 border border-slate-200 shadow-sm ${className}`}>
+    <div className={`bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm ${className}`}>
       {(title || subtitle || right) && (
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>

@@ -45,20 +45,27 @@ export default function KpiCard({
   label, value, unit, delta, deltaLabel, deltaFallback = "—", icon, accent = "blue", size = "medium",
 }: Props) {
   const hasDelta = delta !== undefined && delta !== null && isFinite(delta);
-  const numberSize = size === "large" ? "text-[40px]" : "text-[32px]";
+  /*
+   * 반응형 숫자 크기:
+   *   large: 모바일 28px → sm 이상 40px
+   *   medium: 모바일 24px → sm 이상 32px
+   */
+  const numberSize = size === "large"
+    ? "text-[28px] sm:text-[40px]"
+    : "text-2xl sm:text-[32px]";
 
   return (
-    <div className="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col gap-2 overflow-hidden min-h-[120px]">
+    <div className="relative bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm flex flex-col gap-2 min-h-[100px] sm:min-h-[120px]">
       <span className={`absolute left-0 top-0 bottom-0 w-1 ${ACCENT_BAR[accent]}`} />
-      {/* 라벨 — 14px, 중간 회색 */}
+      {/* 라벨 — 모바일 13px, sm 이상 14px */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-500 tracking-tight">{label}</span>
+        <span className="text-[13px] sm:text-sm font-medium text-slate-500 tracking-tight">{label}</span>
         {icon && <span className="text-slate-400 text-lg">{icon}</span>}
       </div>
-      {/* 메인 숫자 — 32-40px, 진한 검정 */}
-      <div className="flex items-baseline gap-1.5">
-        <span className={`${numberSize} font-bold text-slate-900 leading-tight tracking-tight`} style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>
-        {unit && <span className="text-base text-slate-500">{unit}</span>}
+      {/* 메인 숫자 — 반응형: 모바일 24-28px / 데스크탑 32-40px */}
+      <div className="flex items-baseline gap-1.5 min-w-0">
+        <span className={`${numberSize} font-bold text-slate-900 leading-tight tracking-tight truncate`} style={{ fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        {unit && <span className="text-sm sm:text-base text-slate-500 shrink-0">{unit}</span>}
       </div>
       {/* 증감률 — 12px */}
       {delta !== undefined && (

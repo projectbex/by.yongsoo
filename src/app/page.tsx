@@ -16,6 +16,9 @@ import {
   computeMainKpi, revenue, profit, inRange, shiftYearBack, toYmd,
 } from "@/lib/kpi";
 import { revenueByCategory, getCategoryColor } from "@/lib/category";
+import { aggregateSales, getNewProductDetails } from "@/lib/salesAggregator";
+import { getMonthsSinceLaunch } from "@/lib/productClassifier";
+import { getActivePromotions, getDaysUntilEnd } from "@/data/promotions";
 
 type YearTab = "YTD" | "2023" | "2024" | "2025" | "2026" | "ALL";
 
@@ -117,6 +120,13 @@ export default function HomePage() {
   // ── 영업이익 요약 ──
   const profitTotal = useMemo(() => profit(filtered), [filtered]);
 
+  // ── Phase 2: 신상품 매출 분리 ──
+  const salesSummary = useMemo(() => aggregateSales(filtered), [filtered]);
+  const newProductDetails = useMemo(() => getNewProductDetails(filtered), [filtered]);
+
+  // ── Phase 4: 프로모션 현황 ──
+  const activePromotions = useMemo(() => getActivePromotions(), []);
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
 
@@ -128,7 +138,7 @@ export default function HomePage() {
    *   - 최대 너비: max-w-[1440px] 추가
    */}
   return (
-    <div className="px-4 md:px-8 py-6 md:py-8 space-y-8 max-w-[1440px] mx-auto">
+    <div className="px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-8 space-y-5 sm:space-y-8 max-w-[1440px] mx-auto">
       <PageHeader
         title="전체 개요"
         subtitle={`${tabRange.label} · ${tabRange.from.slice(0, 4)}-${tabRange.from.slice(4, 6)}-${tabRange.from.slice(6, 8)} ~ ${tabRange.to.slice(0, 4)}-${tabRange.to.slice(4, 6)}-${tabRange.to.slice(6, 8)}`}
@@ -207,10 +217,10 @@ export default function HomePage() {
          * 변경: 숫자 크기 3xl→4xl, 보조텍스트 xs→sm, 이익률 2xl→3xl
          */}
         <ChartCard title="영업이익 / 이익률" subtitle="기간 합산">
-          <div className="flex flex-col items-center justify-center h-[300px] gap-3">
-            <div className="text-4xl font-bold text-emerald-600" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(profitTotal)}</div>
-            <div className="text-sm text-slate-500">매출 {fmtKrw(kpi.totalRevenue)} 중</div>
-            <div className="text-3xl font-semibold text-slate-700 mt-2" style={{ fontVariantNumeric: "tabular-nums" }}>
+          <div className="flex flex-col items-center justify-center h-[260px] sm:h-[300px] gap-3">
+            <div className="text-2xl sm:text-4xl font-bold text-emerald-600" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(profitTotal)}</div>
+            <div className="text-xs sm:text-sm text-slate-500">매출 {fmtKrw(kpi.totalRevenue)} 중</div>
+            <div className="text-xl sm:text-3xl font-semibold text-slate-700 mt-2" style={{ fontVariantNumeric: "tabular-nums" }}>
               {kpi.totalRevenue > 0 ? ((profitTotal / kpi.totalRevenue) * 100).toFixed(1) + "%" : "—"}
             </div>
             <div className="text-xs text-slate-400">이익률</div>
@@ -253,6 +263,219 @@ export default function HomePage() {
         </ResponsiveContainer>
       </ChartCard>
 
+      {/* ========== Phase 2: 신상품 KPI 영역 ========== */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-5 tracking-tight">
+          신상품 성과
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <KpiCard
+            label="신상품 매출 (당기)"
+            value={fmtKrw(salesSummary.newProductRevenue)}
+            icon="🆕"
+            accent="violet"
+            delta={null}
+            deltaFallback={`${salesSummary.newProductRatio.toFixed(1)}% 비중`}
+          />
+          <KpiCard
+            label="기존상품 매출 (당기)"
+            value={fmtKrw(salesSummary.existingProductRevenue)}
+            icon="📦"
+            accent="slate"
+            delta={null}
+            deltaFallback={`${(100 - salesSummary.newProductRatio).toFixed(1)}% 비중`}
+          />
+          <KpiCard
+            label="신상품 비중"
+            value={`${salesSummary.newProductRatio.toFixed(1)}%`}
+            icon="📊"
+            accent={salesSummary.newProductRatio >= 15 ? "emerald" : "amber"}
+            delta={null}
+            deltaFallback="목표: 15% 이상"
+          />
+        </div>
+      </section>
+
+      {/* ========== Phase 2: 신상품 매출 현황 테이블 ========== */}
+      <ChartCard title="신상품 매출 현황" subtitle={`등록 ${newProductDetails.length}개 SKU`}>
+        <div className="overflow-x-auto max-h-[520px]">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-[#F7F8FA] z-10">
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">상품명</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">카테고리</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">출시일</th>
+                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">출시 후 경과</th>
+                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">당기 매출</th>
+                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">판매수량</th>
+              </tr>
+            </thead>
+            <tbody>
+              {newProductDetails.map((p) => (
+                <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-4 text-[13px] text-slate-900 font-medium max-w-[260px] truncate">{p.name}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-500">{p.category}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-500">{p.launchDate}</td>
+                  <td className="py-3 px-4 text-[13px] text-slate-500">
+                    {getMonthsSinceLaunch(p.launchDate).toFixed(0)}개월
+                  </td>
+                  <td className="py-3 px-4 text-[13px] text-slate-900 font-semibold text-right whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {p.monthlyRevenue > 0 ? fmtKrw(p.monthlyRevenue) : "—"}
+                  </td>
+                  <td className="py-3 px-4 text-[13px] text-slate-700 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {p.quantity > 0 ? fmt(p.quantity) : "—"}
+                  </td>
+                </tr>
+              ))}
+              {newProductDetails.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-sm text-slate-400">
+                    등록된 신상품이 없습니다
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </ChartCard>
+
+      {/* ========== Phase 3: 매출 구성 (경영속보 기준) ========== */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-5 tracking-tight">
+          매출 구성 (경영속보 기준)
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <KpiCard
+            label="외부 매출"
+            value={fmtKrw(salesSummary.externalRevenue)}
+            icon="🏢"
+            accent="slate"
+            delta={null}
+            deltaFallback={`${salesSummary.externalRatio.toFixed(1)}% 비중`}
+          />
+          <KpiCard
+            label="내부거래 (그룹사)"
+            value={fmtKrw(salesSummary.internalRevenue)}
+            icon="🔄"
+            accent="slate"
+            delta={null}
+            deltaFallback={`${(100 - salesSummary.externalRatio).toFixed(1)}% 비중`}
+          />
+          <KpiCard
+            label="총 매출 (외부+내부)"
+            value={fmtKrw(salesSummary.totalRevenue)}
+            icon="📋"
+            accent="slate"
+            delta={null}
+            deltaFallback="경영속보 보고 기준"
+          />
+        </div>
+      </section>
+
+      {/* Phase 3: 그룹사별 내부거래 테이블 */}
+      {salesSummary.internalByGroup.length > 0 && (
+        <ChartCard title="그룹사별 내부거래" subtitle={`${salesSummary.internalByGroup.length}개 그룹사`}>
+          <div className="overflow-x-auto max-h-[400px]">
+            <table className="w-full">
+              <thead className="sticky top-0 bg-[#F7F8FA] z-10">
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">그룹사</th>
+                  <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">거래건수</th>
+                  <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">매출액</th>
+                  <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">비중</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesSummary.internalByGroup.map((g) => (
+                  <tr key={g.group} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 text-[13px] text-slate-900 font-medium">{g.group}</td>
+                    <td className="py-3 px-4 text-[13px] text-slate-700 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{fmt(g.count)}</td>
+                    <td className="py-3 px-4 text-[13px] text-slate-900 font-semibold text-right whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(g.revenue)}</td>
+                    <td className="py-3 px-4 text-[13px] text-slate-500 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
+                      {salesSummary.internalRevenue > 0 ? ((g.revenue / salesSummary.internalRevenue) * 100).toFixed(1) + "%" : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </ChartCard>
+      )}
+
+      {/* ========== Phase 4: 프로모션 현황 ========== */}
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900 mb-5 tracking-tight">
+          프로모션 현황
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <KpiCard
+            label="진행 중 프로모션"
+            value={`${activePromotions.length}건`}
+            icon="🏷️"
+            accent="slate"
+            delta={null}
+            deltaFallback="현재 활성"
+          />
+          <KpiCard
+            label="적용 가능 SKU"
+            value={`${new Set(activePromotions.flatMap((p) => p.applicableProductIds)).size}개`}
+            icon="📦"
+            accent="slate"
+            delta={null}
+            deltaFallback="중복 제외"
+          />
+          <KpiCard
+            label="최단 종료일"
+            value={activePromotions.length > 0 ? `D-${Math.max(0, Math.min(...activePromotions.map((p) => getDaysUntilEnd(p.endDate))))}` : "—"}
+            icon="⏰"
+            accent="slate"
+            delta={null}
+            deltaFallback={activePromotions.length > 0 ? activePromotions.reduce((a, b) => getDaysUntilEnd(a.endDate) < getDaysUntilEnd(b.endDate) ? a : b).name : ""}
+          />
+        </div>
+      </section>
+
+      {/* Phase 4: 진행 중 프로모션 테이블 */}
+      {activePromotions.length > 0 && (
+        <ChartCard title="진행 중 프로모션 상세" subtitle={`${activePromotions.length}건 활성`}>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="sticky top-0 bg-[#F7F8FA] z-10">
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">프로모션명</th>
+                  <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">유형</th>
+                  <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">기간</th>
+                  <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">남은 일수</th>
+                  <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activePromotions.map((p) => {
+                  const daysLeft = getDaysUntilEnd(p.endDate);
+                  return (
+                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-4 text-[13px] text-slate-900 font-medium">{p.name}</td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">
+                          {p.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-[13px] text-slate-500 whitespace-nowrap">{p.startDate} ~ {p.endDate}</td>
+                      <td className="py-3 px-4 text-[13px] text-right font-semibold" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        <span className={daysLeft <= 14 ? "text-red-600" : daysLeft <= 30 ? "text-amber-600" : "text-slate-700"}>
+                          D-{daysLeft}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-[13px] text-slate-500 max-w-[300px]">{p.description}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </ChartCard>
+      )}
+
       {/*
        * 거래처 순위 — Phase 1 UX 개선
        * 변경: 헤더 text-[11px]→text-[13px], 본문 text-xs→text-[13px]
@@ -264,21 +487,21 @@ export default function HomePage() {
           <table className="w-full">
             <thead className="sticky top-0 bg-[#F7F8FA] z-10">
               <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">#</th>
-                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">거래처</th>
-                <th className="text-left py-3 px-4 text-[13px] font-medium text-slate-500">팀</th>
-                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">수량</th>
-                <th className="text-right py-3 px-4 text-[13px] font-medium text-slate-500">매출</th>
+                <th className="text-left py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] font-medium text-slate-500">#</th>
+                <th className="text-left py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] font-medium text-slate-500">거래처</th>
+                <th className="text-left py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] font-medium text-slate-500 hidden sm:table-cell">팀</th>
+                <th className="text-right py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] font-medium text-slate-500 hidden sm:table-cell">수량</th>
+                <th className="text-right py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] font-medium text-slate-500">매출</th>
               </tr>
             </thead>
             <tbody>
               {customerRank.map((c) => (
                 <tr key={c.customer} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 text-[13px] text-slate-400">{c.rank}</td>
-                  <td className="py-3 px-4 text-[13px] text-slate-900 font-medium max-w-[220px] truncate">{c.customer}</td>
-                  <td className="py-3 px-4 text-[13px] text-slate-500">{c.team}</td>
-                  <td className="py-3 px-4 text-[13px] text-slate-700 text-right" style={{ fontVariantNumeric: "tabular-nums" }}>{fmt(c.qty)}</td>
-                  <td className="py-3 px-4 text-[13px] text-slate-900 font-semibold text-right whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(c.amt)}</td>
+                  <td className="py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] text-slate-400">{c.rank}</td>
+                  <td className="py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] text-slate-900 font-medium max-w-[140px] sm:max-w-[220px] truncate">{c.customer}</td>
+                  <td className="py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] text-slate-500 hidden sm:table-cell">{c.team}</td>
+                  <td className="py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] text-slate-700 text-right hidden sm:table-cell" style={{ fontVariantNumeric: "tabular-nums" }}>{fmt(c.qty)}</td>
+                  <td className="py-2 px-2 sm:py-3 sm:px-4 text-xs sm:text-[13px] text-slate-900 font-semibold text-right whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtKrw(c.amt)}</td>
                 </tr>
               ))}
             </tbody>

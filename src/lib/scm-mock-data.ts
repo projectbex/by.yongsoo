@@ -1,10 +1,11 @@
 import type { Product, Vendor, Bom, SupplyItem, PurchaseOrder } from "./scm-types";
+import productMasterJson from "@/generated/product-master.json";
 
 // ─────────────────────────────────────────
 // 상품 마스터 — 실제 BEX 제품 데이터
 // ─────────────────────────────────────────
 
-export const mockProducts: Product[] = [
+const _manualProducts: Product[] = [
   // ── WD-40 시리즈 (기존) ──
   {
     id: "p1", code: "WD-100ML", name: "WD-40 멀티유즈 100ml", barcode: "8809123456001",
@@ -211,9 +212,41 @@ export const mockProducts: Product[] = [
     costHistory: [{ date: "2026-04-01", cost: 1500, reason: "예정 단가" }],
     documents: [{ name: "런칭기획서.pdf", type: "기획", date: "2026-03-20" }],
   },
+
+  // ── 제품현황 엑셀 전체 (1,897개) — 아래 productMasterJson에서 자동 로드 ──
+  // 수동 데이터(WD-40, 케이블타이, 방진복, 베지아쿠아)는 위에 보존
+  // bex001~114 삭제 → JSON 전체로 교체
+].concat(/* placeholder removed */[]) as Product[];
+
+// 엑셀 기반 BEX 제품 (유통소비재 + GC100X만, 산업유 제외)
+const BEX_CATEGORIES = new Set(["유통소비재(BEX)", "GC100X(BEX)"]);
+const excelProducts: Product[] = (productMasterJson as Array<Record<string, unknown>>)
+  .filter((p) => BEX_CATEGORIES.has(String(p.category)))
+  .map((p) => ({
+    id: String(p.id),
+    code: String(p.code),
+    name: String(p.name),
+    barcode: String(p.barcode || ""),
+    category: String(p.category),
+    series: String(p.series || ""),
+    manufacturer: String(p.manufacturer || ""),
+    variant: String(p.variant || ""),
+    status: "진행" as const,
+    unitCost: Number(p.unitCost) || 0,
+    active: Boolean(p.active),
+    memo: String(p.memo || ""),
+  }));
+
+// 수동 데이터 코드 셋 (중복 방지)
+const manualCodes = new Set(_manualProducts.map((p) => p.code));
+
+// 최종 병합: 수동(상세 데이터) 우선 + 엑셀(BEX만)
+export const mockProducts: Product[] = [
+  ..._manualProducts,
+  ...excelProducts.filter((p) => !manualCodes.has(p.code)),
 ];
 
-// ─────────────────────────────────────────
+
 // 거래처
 // ─────────────────────────────────────────
 

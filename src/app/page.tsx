@@ -20,7 +20,7 @@ import { aggregateSales, getNewProductDetails } from "@/lib/salesAggregator";
 import { getMonthsSinceLaunch } from "@/lib/productClassifier";
 import { getActivePromotions, getDaysUntilEnd } from "@/data/promotions";
 
-type YearTab = "YTD" | "2023" | "2024" | "2025" | "2026" | "ALL";
+type YearTab = "2023" | "2024" | "2025" | "2026";
 
 function yearTabRange(tab: YearTab): { from: string; to: string; label: string } {
   const now = new Date();
@@ -29,17 +29,15 @@ function yearTabRange(tab: YearTab): { from: string; to: string; label: string }
     String(now.getMonth() + 1).padStart(2, "0") +
     String(now.getDate()).padStart(2, "0");
   const curYear = now.getFullYear();
-  if (tab === "YTD") return { from: `${curYear}0101`, to: todayStr, label: `${curYear} 누적 (YTD)` };
-  if (tab === "ALL") return { from: "20230101", to: todayStr, label: "전체 기간" };
   const y = Number(tab);
   if (y === curYear) return { from: `${y}0101`, to: todayStr, label: `${y}년 누적` };
-  return { from: `${y}0101`, to: `${y}1231`, label: `${y}년 전체` };
+  return { from: `${y}0101`, to: `${y}1231`, label: `${y}년` };
 }
 
 export default function HomePage() {
   const { sales, receivables, targets, loading, error, reload } = useData();
 
-  const [yearTab, setYearTab] = useState<YearTab>("YTD");
+  const [yearTab, setYearTab] = useState<YearTab>("2026");
   const tabRange = useMemo(() => yearTabRange(yearTab), [yearTab]);
 
   const filtered = useMemo(
@@ -147,12 +145,10 @@ export default function HomePage() {
       {/* 연도 탭 */}
       <div className="flex flex-wrap gap-1 border-b border-slate-200">
         {([
-          { id: "YTD", label: "올해 누적" },
           { id: "2026", label: "2026" },
           { id: "2025", label: "2025" },
           { id: "2024", label: "2024" },
           { id: "2023", label: "2023" },
-          { id: "ALL", label: "전체" },
         ] as { id: YearTab; label: string }[]).map((t) => {
           const active = yearTab === t.id;
           return (

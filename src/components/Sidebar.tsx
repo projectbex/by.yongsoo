@@ -102,6 +102,15 @@ export default function Sidebar() {
               <p className="text-[10px] text-gray-500">유통영업본부 BI</p>
             </div>
           </div>
+          <a
+            href="https://projectbex.github.io/by.yongsoo/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors group"
+          >
+            <span className="text-[10px]">🔗</span>
+            <span className="text-[11px] text-gray-400 group-hover:text-gray-200 truncate">projectbex.github.io/by.yongsoo</span>
+          </a>
         </div>
 
         {/* Menu */}

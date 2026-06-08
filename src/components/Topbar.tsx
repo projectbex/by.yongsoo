@@ -51,6 +51,12 @@ export default function Topbar() {
             onChange={(e) => set("to", fromDateInput(e.target.value))}
             className={inputCls}
           />
+          <button
+            onClick={() => setFilters({ ...filters })}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition"
+          >
+            조회
+          </button>
         </div>
 
         <div className="w-px h-5 bg-slate-200 mx-1" />

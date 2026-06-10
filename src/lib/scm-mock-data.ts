@@ -6,31 +6,6 @@ import productMasterJson from "@/generated/product-master.json";
 // ─────────────────────────────────────────
 
 const _manualProducts: Product[] = [
-  // ── WD-40 시리즈 (기존) ──
-  {
-    id: "p1", code: "WD-100ML", name: "WD-40 멀티유즈 100ml", barcode: "8809123456001",
-    category: "유통소비재(BEX)", series: "WD-40 멀티유즈", manufacturer: "WD-40 Korea",
-    variant: "100ml", status: "진행", unitCost: 880, active: true, memo: "주력 상품",
-    boxWidth: 50, boxHeight: 150, boxDepth: 50, weight: 130, volume: 375, launchDate: "2020-03-01",
-    costHistory: [
-      { date: "2026-01-01", cost: 880, reason: "원자재 단가 인상" },
-      { date: "2025-06-01", cost: 820, reason: "연간 계약 갱신" },
-      { date: "2024-01-01", cost: 780, reason: "초기 단가" },
-    ],
-    documents: [
-      { name: "WD-40 디자인 가이드.pdf", type: "디자인", date: "2025-03-15" },
-      { name: "MSDS 안전보건자료.pdf", type: "인증서", date: "2024-09-10" },
-    ],
-  },
-  {
-    id: "p2", code: "WD-191ML", name: "WD-40 멀티유즈 191ml", barcode: "8809123456002",
-    category: "유통소비재(BEX)", series: "WD-40 멀티유즈", manufacturer: "WD-40 Korea",
-    variant: "191ml", status: "진행", unitCost: 1250, active: true, memo: "",
-    boxWidth: 55, boxHeight: 180, boxDepth: 55, weight: 220, volume: 544, launchDate: "2020-03-01",
-    costHistory: [{ date: "2026-01-01", cost: 1250, reason: "연간 계약" }],
-    documents: [],
-  },
-
   // ── 케이블타이 시리즈 (2026 신상품) ──
   // 소재: Nylon 6.6 (PA66), Self-Locking, -40°C ~ +85°C
   {
